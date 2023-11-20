@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+	<persistence-unit name="Pf_Artis" >
+		
+		<provider>org.hibernate.ejb.HibernatePersistence</provider> 
+        <class>com.Pf_Artis.models.Category</class>
+        <class>com.Pf_Artis.models.Commande</class>
+        <class>com.Pf_Artis.models.Facture</class>
+        <class>com.Pf_Artis.models.LigneCommande</class>
+        <class>com.Pf_Artis.models.LigneCommandeKey</class>
+        <class>com.Pf_Artis.models.Produit</class>
+        <class>com.Pf_Artis.models.Store</class>
+        <class>com.Pf_Artis.models.User</class>
+        <properties>
+            <property name="javax.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/artisapp"/>
+            <property name="javax.persistence.jdbc.user" value="root"/>
+            <property name="javax.persistence.jdbc.password" value=""/>
+            
+            <!-- Enable EclipseLink to log SQL statements to stdout -->
+            <property name="eclipselink.logging.level.sql" value="FINE"/>
+	        <property name="eclipselink.logging.parameters" value="true"/>
+	        <property name="eclipselink.logging.logger" value="DefaultLogger"/>
+	        
+	        <!-- Enable SQL formatting -->
+	        <property name="eclipselink.logging.parameters.format" value="true"/>
+        
+            
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/> 
+            <property name="javax.persistence.schema-generation.database.action" value="update"/>
+	      	<property name="javax.persistence.schema-generation.create-source" value="metadata"/>
+	      	<property name="javax.persistence.schema-generation.drop-source" value="metadata"/>
+	      	<property name="hibernate.show_sql" value="true"/>
+        </properties>
+		
+	</persistence-unit>
+</persistence>

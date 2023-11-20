@@ -1,0 +1,57 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.Pf_Artis</groupId>
+  <artifactId>Pf_Artis</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>Pf_Artis</name>
+  <description>Pf_Artisanat</description>
+  <url>http://maven.apache.org</url>
+  <dependencies>
+	<!-- https://mvnrepository.com/artifact/jakarta.platform/jakarta.jakartaee-api -->
+	<dependency>
+	    <groupId>jakarta.platform</groupId>
+	    <artifactId>jakarta.jakartaee-web-api</artifactId>
+	    <version>10.0.0</version>
+	    <scope>provided</scope>
+	</dependency>
+	<dependency>
+	    <groupId>org.projectlombok</groupId>
+	    <artifactId>lombok</artifactId>
+	    <version>1.18.24</version>
+	    <scope>provided</scope>
+	</dependency>
+	<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
+	<dependency>
+	    <groupId>org.hibernate</groupId>
+	    <artifactId>hibernate-core</artifactId>
+	    <version>5.6.12.Final</version>
+	</dependency>
+
+	<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+	<dependency>
+	    <groupId>mysql</groupId>
+	    <artifactId>mysql-connector-java</artifactId>
+	    <version>8.0.33</version>
+	</dependency>
+	<dependency>
+	    <groupId>junit</groupId>
+	    <artifactId>junit</artifactId>
+	    <version>4.11</version>
+	    <scope>test</scope>
+	</dependency>
+	<dependency>
+	    <groupId>com.h2database</groupId>
+	    <artifactId>h2</artifactId>
+	    <version>2.2.224</version>
+	</dependency>
+
+  	<dependency>
+    	<groupId>javax</groupId>
+    	<artifactId>javaee-api</artifactId>
+    	<version>8.0</version>
+    	<scope>provided</scope>
+  	</dependency>
+
+
+  </dependencies>
+</project>
