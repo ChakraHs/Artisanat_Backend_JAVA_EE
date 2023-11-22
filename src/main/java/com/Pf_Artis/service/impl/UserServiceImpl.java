@@ -36,13 +36,14 @@ public class UserServiceImpl implements UserServiceInterface {
 		user.setRole( resultSet.getString("role") );
 		user.setEmail( resultSet.getString("email") );
 		user.setPassword( resultSet.getString("password") );
+		user.setProfile( resultSet.getString( "profile" ) );
 		return user;
 	}
 	
 	@Override
 	public User createUser(User user) {
 		
-		final String SQL_INSERT = "INSERT INTO user ( adresse , email , nom , password , prenom , role , telephone ) VALUES (  ? , ? , ? , ? , ? , ? , ? ) ";
+		final String SQL_INSERT = "INSERT INTO user ( adresse , email , nom , password , prenom , role , telephone , profile ) VALUES (  ? , ? , ? , ? , ? , ? , ? , ? ) ";
 		final String SQL_SELECT_MAX = " SELECT max(id) as max_id from user ";
 		
 		Connection connexion = null;
@@ -52,7 +53,7 @@ public class UserServiceImpl implements UserServiceInterface {
 	    try {
 	    	connexion = daoFactory.getConnection();
 	    	
-	    	preparedStatement = RequestPrepare.initRequestPrepare( connexion , SQL_INSERT , user.getAdresse() , user.getEmail() , user.getNom() , user.getPassword() , user.getPrenom() , user.getRole() , user.getTelephone() );
+	    	preparedStatement = RequestPrepare.initRequestPrepare( connexion , SQL_INSERT , user.getAdresse() , user.getEmail() , user.getNom() , user.getPassword() , user.getPrenom() , user.getRole() , user.getTelephone() , user.getProfile() );
 	        preparedStatement.executeUpdate();
 	        
 	        PreparedStatement ps2 = RequestPrepare.initRequestPrepare( connexion , SQL_SELECT_MAX );
@@ -74,7 +75,7 @@ public class UserServiceImpl implements UserServiceInterface {
 	@Override
 	public User readUser(Long id) {
 		
-		final String SQL_SELECT_PAR_ID = "SELECT id , adresse , email , nom , password , prenom , role , telephone FROM user  WHERE id = ?";
+		final String SQL_SELECT_PAR_ID = "SELECT id , adresse , email , nom , password , prenom , role , telephone , profile FROM user  WHERE id = ?";
 		
 		Connection connexion = null;
 	    PreparedStatement preparedStatement = null;
@@ -104,7 +105,7 @@ public class UserServiceImpl implements UserServiceInterface {
 	@Override
 	public User updateUser(User user) {
 		
-		final String SQL_UPDATE = "UPDATE user SET adresse = ? , email = ? , nom = ? , password = ? , prenom = ? , role = ? , telephone = ? where id = ? ";
+		final String SQL_UPDATE = "UPDATE user SET adresse = ? , email = ? , nom = ? , password = ? , prenom = ? , role = ? , telephone = ? , profile = ? where id = ? ";
 		
 		Connection connexion = null;
 		PreparedStatement preparedStatement = null;
@@ -113,7 +114,7 @@ public class UserServiceImpl implements UserServiceInterface {
 			
 			connexion = daoFactory.getConnection();
 			
-	        preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_UPDATE  , user.getAdresse() , user.getEmail() , user.getNom() , user.getPassword() , user.getPrenom() , user.getRole() , user.getTelephone() ,user.getId()  );
+	        preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_UPDATE  , user.getAdresse() , user.getEmail() , user.getNom() , user.getPassword() , user.getPrenom() , user.getRole() , user.getTelephone() , user.getProfile() ,user.getId()  );
 	        preparedStatement.executeUpdate();
 			
 		} catch (SQLException e) {
@@ -150,7 +151,7 @@ public class UserServiceImpl implements UserServiceInterface {
 	@Override
 	public List<User> getAllUsers() {
 		
-		final String SQL_SELECT_ALL = " SELECT id , adresse , email , nom , password , prenom , role , telephone FROM user ";
+		final String SQL_SELECT_ALL = " SELECT id , adresse , email , nom , password , prenom , role , telephone , profile FROM user ";
 		Connection connexion = null;
 		PreparedStatement preparedStatement = null;
 	    ResultSet resultSet = null;

@@ -81,4 +81,7 @@ public class Produit implements Serializable{
 			inverseJoinColumns = @JoinColumn(name="categoryId")
 			)
 	List<Category> categories;
+	
+	@OneToMany(mappedBy = "produit",fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+	List<Image> images;
 }

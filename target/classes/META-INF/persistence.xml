@@ -6,6 +6,7 @@
         <class>com.Pf_Artis.models.Category</class>
         <class>com.Pf_Artis.models.Commande</class>
         <class>com.Pf_Artis.models.Facture</class>
+        <class>com.Pf_Artis.models.Image</class>
         <class>com.Pf_Artis.models.LigneCommande</class>
         <class>com.Pf_Artis.models.LigneCommandeKey</class>
         <class>com.Pf_Artis.models.Produit</class>

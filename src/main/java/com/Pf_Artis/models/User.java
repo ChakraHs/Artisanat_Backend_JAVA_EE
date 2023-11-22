@@ -49,6 +49,7 @@ public class User implements Serializable{
 	@Column(nullable = false)
 	String telephone;
 	
+	String profile;
 	
 	@Column(nullable = false)
     String email;

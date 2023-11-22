@@ -13,6 +13,7 @@ import com.Pf_Artis.dao.RequestPrepare;
 import com.Pf_Artis.models.Store;
 import com.Pf_Artis.models.User;
 import com.Pf_Artis.service.facade.StoreServiceInterface;
+import com.Pf_Artis.service.facade.UserServiceInterface;
 
 public class StoreServiceImpl implements StoreServiceInterface {
 	
@@ -27,20 +28,14 @@ public class StoreServiceImpl implements StoreServiceInterface {
 
 	private static Store map( ResultSet resultSet ) throws SQLException {
 		Store store = new Store();
-		store.setId( resultSet.getLong( "store_id" ) );
-		store.setNom( resultSet.getString( "store_nom" ) );
+		store.setId( resultSet.getLong( "id" ) );
+		store.setNom( resultSet.getString( "nom" ) );
 		store.setAdress( resultSet.getString("adress"));
-		store.setTelephone( resultSet.getString("store_telephone") );
-		User user = new User();
+		store.setTelephone( resultSet.getString("telephone") );
+		store.setProfile( resultSet.getString("profile") );
 		
-		user.setId( resultSet.getLong( "artisant_id" ) );
-		user.setNom( resultSet.getString( "user_nom" ) );
-		user.setPrenom( resultSet.getString( "prenom" ) );
-		user.setAdresse( resultSet.getString("adresse"));
-		user.setTelephone( resultSet.getString("user_telephone") );
-		user.setRole( resultSet.getString("role") );
-		user.setEmail( resultSet.getString("email") );
-		user.setPassword( resultSet.getString("password") );
+		UserServiceInterface userService = new UserServiceImpl(DaoFactory.getInstance());
+		User user = userService.readUser( resultSet.getLong("artisant_id") );
 		
 		store.setArtisant(user);
 		
@@ -51,7 +46,7 @@ public class StoreServiceImpl implements StoreServiceInterface {
 	@Override
 	public Store createStore(Store store) {
 		
-		final String SQL_INSERT = "INSERT INTO store ( adress , nom , telephone , artisant_id ) VALUES (  ? , ? , ? , ? ) ";
+		final String SQL_INSERT = "INSERT INTO store ( adress , nom , telephone , artisant_id , profile ) VALUES (  ? , ? , ? , ? , ? ) ";
 		final String SQL_SELECT_MAX = " SELECT max(id) as max_id from store ";
 		
 		Connection connexion = null;
@@ -62,7 +57,7 @@ public class StoreServiceImpl implements StoreServiceInterface {
 				
 		    	connexion = daoFactory.getConnection();
 		    	
-		    	preparedStatement = RequestPrepare.initRequestPrepare( connexion , SQL_INSERT , store.getAdress() , store.getNom() , store.getTelephone() , store.getArtisant().getId() );
+		    	preparedStatement = RequestPrepare.initRequestPrepare( connexion , SQL_INSERT , store.getAdress() , store.getNom() , store.getTelephone() , store.getArtisant().getId() , store.getProfile() );
 		    	preparedStatement.executeUpdate();
 		    	
 		    	PreparedStatement ps2 = RequestPrepare.initRequestPrepare( connexion , SQL_SELECT_MAX );
@@ -89,11 +84,7 @@ public class StoreServiceImpl implements StoreServiceInterface {
 	@Override
 	public Store readStore(Long id) {
 		
-		final String SQL_SELECT_PAR_ID = "SELECT "
-				+ "s.id store_id , adress , s.nom store_nom ,s.telephone store_telephone , artisant_id"
-				+ " , email , adresse , u.nom user_nom , password , prenom , role , u.telephone user_telephone "
-				+ "FROM user u , store s  "
-				+ "WHERE s.id = ? and u.id = artisant_id";
+		final String SQL_SELECT_PAR_ID = "SELECT id , adress , nom , telephone , artisant_id , profile FROM store WHERE id = ?";
 		Connection connexion = null;
 	    PreparedStatement preparedStatement = null;
 	    ResultSet resultSet = null;
@@ -124,7 +115,7 @@ public class StoreServiceImpl implements StoreServiceInterface {
 	@Override
 	public Store updateStore(Store store) {
 		
-		final String SQL_UPDATE = "UPDATE store SET adress = ? , nom = ? , telephone = ? where id = ? ";
+		final String SQL_UPDATE = "UPDATE store SET adress = ? , nom = ? , telephone = ? , profile = ? where id = ? ";
 		
 		Connection connexion = null;
 		PreparedStatement preparedStatement = null;
@@ -133,7 +124,7 @@ public class StoreServiceImpl implements StoreServiceInterface {
 			
 			connexion = daoFactory.getConnection();
 			
-			preparedStatement = RequestPrepare.initRequestPrepare(connexion, SQL_UPDATE, store.getAdress(),store.getNom(),store.getTelephone(),store.getId());
+			preparedStatement = RequestPrepare.initRequestPrepare(connexion, SQL_UPDATE, store.getAdress(),store.getNom(),store.getTelephone() , store.getProfile() , store.getId());
 			preparedStatement.executeUpdate();
 			
 			
@@ -169,11 +160,7 @@ public class StoreServiceImpl implements StoreServiceInterface {
 
 	@Override
 	public List<Store> getAllStores() {
-		final String SQL_SELECT_ALL = "SELECT "
-				+ "s.id store_id , adress , s.nom store_nom ,s.telephone store_telephone , artisant_id"
-				+ " , email , adresse , u.nom user_nom , password , prenom , role , u.telephone user_telephone "
-				+ "FROM user u , store s  "
-				+ "WHERE u.id = artisant_id";
+		final String SQL_SELECT_ALL = "SELECT id , adress , nom , telephone , artisant_id , profile FROM store";
 		
 		Connection connexion = null;
 		PreparedStatement preparedStatement = null;

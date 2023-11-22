@@ -29,4 +29,14 @@
     <servlet-name>Controller</servlet-name>
     <url-pattern>/Controller</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>ImageController</display-name>
+    <servlet-name>ImageController</servlet-name>
+    <servlet-class>com.Pf_Atis.web.ImageController</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ImageController</servlet-name>
+    <url-pattern>/imageController</url-pattern>
+  </servlet-mapping>
 </web-app>
