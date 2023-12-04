@@ -60,6 +60,9 @@ public class User implements Serializable{
 	@Column(nullable = false)
     String role;
 	
+	@Column(nullable = false)
+	String token;
+	
 	@OneToMany(mappedBy = "client",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
 	List<Commande> commandes ;
 	

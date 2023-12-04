@@ -37,13 +37,14 @@ public class UserServiceImpl implements UserServiceInterface {
 		user.setEmail( resultSet.getString("email") );
 		user.setPassword( resultSet.getString("password") );
 		user.setProfile( resultSet.getString( "profile" ) );
+		user.setToken( resultSet.getString("token"));
 		return user;
 	}
 	
 	@Override
 	public User createUser(User user) {
 		
-		final String SQL_INSERT = "INSERT INTO user ( adresse , email , nom , password , prenom , role , telephone , profile ) VALUES (  ? , ? , ? , ? , ? , ? , ? , ? ) ";
+		final String SQL_INSERT = "INSERT INTO user ( adresse , email , nom , password , prenom , role , telephone , profile , token ) VALUES (  ? , ? , ? , ? , ? , ? , ? , ? , ? ) ";
 		final String SQL_SELECT_MAX = " SELECT max(id) as max_id from user ";
 		
 		Connection connexion = null;
@@ -53,7 +54,7 @@ public class UserServiceImpl implements UserServiceInterface {
 	    try {
 	    	connexion = daoFactory.getConnection();
 	    	
-	    	preparedStatement = RequestPrepare.initRequestPrepare( connexion , SQL_INSERT , user.getAdresse() , user.getEmail() , user.getNom() , user.getPassword() , user.getPrenom() , user.getRole() , user.getTelephone() , user.getProfile() );
+	    	preparedStatement = RequestPrepare.initRequestPrepare( connexion , SQL_INSERT , user.getAdresse() , user.getEmail() , user.getNom() , user.getPassword() , user.getPrenom() , user.getRole() , user.getTelephone() , user.getProfile() , user.getToken() );
 	        preparedStatement.executeUpdate();
 	        
 	        PreparedStatement ps2 = RequestPrepare.initRequestPrepare( connexion , SQL_SELECT_MAX );
@@ -75,7 +76,7 @@ public class UserServiceImpl implements UserServiceInterface {
 	@Override
 	public User readUser(Long id) {
 		
-		final String SQL_SELECT_PAR_ID = "SELECT id , adresse , email , nom , password , prenom , role , telephone , profile FROM user  WHERE id = ?";
+		final String SQL_SELECT_PAR_ID = "SELECT id , adresse , email , nom , password , prenom , role , telephone , profile , token FROM user  WHERE id = ?";
 		
 		Connection connexion = null;
 	    PreparedStatement preparedStatement = null;
@@ -151,7 +152,7 @@ public class UserServiceImpl implements UserServiceInterface {
 	@Override
 	public List<User> getAllUsers() {
 		
-		final String SQL_SELECT_ALL = " SELECT id , adresse , email , nom , password , prenom , role , telephone , profile FROM user ";
+		final String SQL_SELECT_ALL = " SELECT id , adresse , email , nom , password , prenom , role , telephone , profile , token FROM user ";
 		Connection connexion = null;
 		PreparedStatement preparedStatement = null;
 	    ResultSet resultSet = null;
@@ -166,6 +167,7 @@ public class UserServiceImpl implements UserServiceInterface {
 	        
 	        while ( resultSet.next() ) {
 	            user = map( resultSet );
+	            user.setToken("");
 	            users.add(user);
 	        }
 		} catch (SQLException e) {
@@ -182,6 +184,34 @@ public class UserServiceImpl implements UserServiceInterface {
 	public void close() {
 		// TODO Auto-generated method stub
 		
+	}
+	@Override
+	public User getUserByEmail(String email) {
+		
+		final String SQL_SELECT_By_Email = " SELECT id , adresse , email , nom , password , prenom , role , telephone , profile , token FROM user where email = ? ";
+		Connection connexion = null;
+		PreparedStatement preparedStatement = null;
+	    ResultSet resultSet = null;
+	    
+	    User user = null;
+	    
+	    try {
+	    	connexion = daoFactory.getConnection();
+	        preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_SELECT_By_Email , email );
+	        resultSet = preparedStatement.executeQuery();
+	        
+	        while ( resultSet.next() ) {
+	            user = map( resultSet );
+	            user.setToken("");
+	        }
+		} catch (SQLException e) {
+			
+			throw new DaoException( e );
+			
+		}
+	    
+		
+		return user;
 	}
 	
 
