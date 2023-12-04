@@ -52,6 +52,9 @@ public class StoreController extends HttpServlet {
 		
 		if( path == null || path.split("/")[1].equals("*")) {
 			
+			// User user = (User) request.getSession().getAttribute("user");
+			// System.out.println(user);
+			
 			List<Store> stores = storeService.getAllStores();
 			
 			if(!stores.isEmpty()) {

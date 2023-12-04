@@ -15,6 +15,8 @@ public interface UserServiceInterface {
     
     public List<User> getAllUsers();
     
+    public User getUserByEmail( String email );
+    
     public void close();
 	
 }

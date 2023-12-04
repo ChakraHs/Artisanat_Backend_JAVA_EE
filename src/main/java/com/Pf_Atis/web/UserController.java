@@ -84,6 +84,7 @@ public class UserController extends HttpServlet {
 				
 				Long Id = Long.parseLong(pathParts[2]);
 				User user = userService.readUser(Id);
+				user.setToken("");
 				
 				if( user.getId() == null ) {
 					
@@ -122,6 +123,7 @@ public class UserController extends HttpServlet {
 		
 		ObjectMapper objectMapper = new ObjectMapper();
         User newUser = objectMapper.readValue(request.getReader(), User.class);
+        newUser.setToken("");
         User user = userService.createUser(newUser);
         
         try {
@@ -146,7 +148,7 @@ public class UserController extends HttpServlet {
         User newUser = objectMapper.readValue(request.getReader(), User.class);
         Long Id = Long.parseLong(request.getPathInfo().split("/")[2]);
         newUser.setId(Id);
-        
+        newUser.setToken("");
         User user = userService.updateUser(newUser);
         
         try {
