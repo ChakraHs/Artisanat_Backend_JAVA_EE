@@ -48,6 +48,6 @@ public class Category implements Serializable{/**
 			joinColumns = @JoinColumn(name="categoryId"),
 			inverseJoinColumns = @JoinColumn(name="produitId")
 			)
-	List<Produit> produits;
+	private List<Produit> produits;
 	
 }

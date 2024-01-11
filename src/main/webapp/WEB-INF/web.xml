@@ -39,4 +39,24 @@
     <servlet-name>ImageController</servlet-name>
     <url-pattern>/imageController</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>ImageTest</display-name>
+    <servlet-name>ImageTest</servlet-name>
+    <servlet-class>com.Pf_Atis.web.ImageTest</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ImageTest</servlet-name>
+    <url-pattern>/ImageTest</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>TestImageUpload</display-name>
+    <servlet-name>TestImageUpload</servlet-name>
+    <servlet-class>com.Pf_Atis.web.TestImageUpload</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>TestImageUpload</servlet-name>
+    <url-pattern>/TestImageUpload</url-pattern>
+  </servlet-mapping>
 </web-app>

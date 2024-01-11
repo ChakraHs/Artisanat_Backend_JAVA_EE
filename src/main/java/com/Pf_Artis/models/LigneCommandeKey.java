@@ -25,4 +25,6 @@ public class LigneCommandeKey implements Serializable {
 	@Column(name = "commande_id")
 	Long commandeId;
 	
+	
+	
 }

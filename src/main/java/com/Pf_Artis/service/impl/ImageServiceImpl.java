@@ -1,11 +1,17 @@
 package com.Pf_Artis.service.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import com.Pf_Artis.dao.DaoException;
 import com.Pf_Artis.dao.DaoFactory;
@@ -37,8 +43,11 @@ public class ImageServiceImpl implements ImageServiceInterface {
 		return image;
 	}
 	
+	
+	
 	@Override
 	public Image createImage(Image image) {
+	    
 		
 		final String SQL_INSERT = "INSERT INTO image ( path , produit_id ) VALUES (  ? , ? ) ";
 		final String SQL_SELECT_MAX = " SELECT max(id) as max_id from image ";
@@ -69,8 +78,9 @@ public class ImageServiceImpl implements ImageServiceInterface {
 		
 		return image;
 	}
-
-	@Override
+	
+	
+	
 	public Image readImage(Long id) {
 		
 		final String SQL_SELECT_PAR_ID = "SELECT id , path , produit_id FROM image WHERE id = ?";
@@ -105,7 +115,7 @@ public class ImageServiceImpl implements ImageServiceInterface {
 	@Override
 	public Image updateImage(Image image) {
 
-final String SQL_UPDATE = "UPDATE image SET path = ? where id = ? ";
+		final String SQL_UPDATE = "UPDATE image SET path = ? where id = ? ";
 		
 		Connection connexion = null;
 		PreparedStatement preparedStatement = null;
@@ -129,7 +139,7 @@ final String SQL_UPDATE = "UPDATE image SET path = ? where id = ? ";
 
 	@Override
 	public void deleteImage(Long id) {
-final String SQL_DESTROY = " Delete from image where id=? ";
+		final String SQL_DESTROY = " Delete from image where id=? ";
 		
 		Connection connexion = null;
 		PreparedStatement preparedStatement = null;
@@ -159,7 +169,7 @@ final String SQL_DESTROY = " Delete from image where id=? ";
 	    Image image = new Image();
 	    List<Image> images = new ArrayList<Image>();
 	    
-try {
+	    try {
 			
 	    	connexion = daoFactory.getConnection();
 	    	preparedStatement = RequestPrepare.initRequestPrepare(connexion, SQL_SELECT_ALL );
@@ -177,6 +187,10 @@ try {
 		}
 		
 		return images;
+	}
+
+	public Image createImage(Image image, InputStream inputStream, String fileName) {
+		return null;
 	}
 
 }

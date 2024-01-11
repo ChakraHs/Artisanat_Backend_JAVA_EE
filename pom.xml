@@ -6,6 +6,27 @@
   <name>Pf_Artis</name>
   <description>Pf_Artisanat</description>
   <url>http://maven.apache.org</url>
+  
+  
+  <!-- SonarQube Test Code and quality-->
+  <properties>
+    <sonar.jakartaJeeVersion>10</sonar.jakartaJeeVersion>
+    <sonar.login>admin</sonar.login>
+  	<sonar.password>Azerreza@12344321</sonar.password>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.sonarsource.scanner.maven</groupId>
+        <artifactId>sonar-maven-plugin</artifactId>
+        <version>3.9.1.2184</version> <!-- Use the latest version available -->
+      </plugin>
+    </plugins>
+  </build>
+  
+  <!-- SonarQube Test Code and quality -->
+  
   <dependencies>
 	<!-- https://mvnrepository.com/artifact/jakarta.platform/jakarta.jakartaee-api -->
 	<dependency>
