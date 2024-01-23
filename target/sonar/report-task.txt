@@ -1,0 +1,6 @@
+projectKey=com.Pf_Artis:Pf_Artis
+serverUrl=http://localhost:9000
+serverVersion=10.3.0.82913
+dashboardUrl=http://localhost:9000/dashboard?id=com.Pf_Artis%3APf_Artis
+ceTaskId=AY0H3Od2xdoUlk0n_hVE
+ceTaskUrl=http://localhost:9000/api/ce/task?id=AY0H3Od2xdoUlk0n_hVE

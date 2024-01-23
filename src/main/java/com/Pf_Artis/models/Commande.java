@@ -40,8 +40,8 @@ public class Commande implements Serializable{
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(nullable = false)
-	Long id ;
+	@Column(nullable = false, name = "commande_id")
+	Integer commandeId ;
 	
 	@JsonFormat(shape = JsonFormat.Shape.STRING , pattern = "yyyy-MM-dd HH:mm:ss",timezone = "UTC")
 	@Column( nullable = false , name = "date_commande" )

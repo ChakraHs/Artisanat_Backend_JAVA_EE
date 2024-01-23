@@ -12,10 +12,17 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 public class StoreDto {
 
+	Integer storeId;
+	
 	String nom;
+	
 	String adress;
+	
 	String telephone;
-	Long artisant_id;
+	
+	String profile;
+	
+	UserDto artisant;
 	
 	
 }

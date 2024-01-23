@@ -10,6 +10,7 @@
         <class>com.Pf_Artis.models.LigneCommande</class>
         <class>com.Pf_Artis.models.LigneCommandeKey</class>
         <class>com.Pf_Artis.models.Produit</class>
+        <class>com.Pf_Artis.models.Role</class>
         <class>com.Pf_Artis.models.Store</class>
         <class>com.Pf_Artis.models.User</class>
         <properties>

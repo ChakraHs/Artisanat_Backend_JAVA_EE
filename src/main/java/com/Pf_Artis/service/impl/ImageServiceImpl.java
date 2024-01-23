@@ -7,89 +7,74 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ws.rs.NotFoundException;
+
 import com.Pf_Artis.dao.DaoException;
 import com.Pf_Artis.dao.DaoFactory;
 import com.Pf_Artis.dao.RequestPrepare;
-import com.Pf_Artis.models.Image;
-import com.Pf_Artis.models.Produit;
+import com.Pf_Artis.dto.ImageDto;
+import com.Pf_Artis.exception.EntityNotFoundException;
 import com.Pf_Artis.service.facade.ImageServiceInterface;
-import com.Pf_Artis.service.facade.ProduitServiceInterface;
 
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
 public class ImageServiceImpl implements ImageServiceInterface {
 
 	private DaoFactory daoFactory;
-	
-	public ImageServiceImpl(DaoFactory daoFactory) {
-		super();
-		this.daoFactory = daoFactory;
-	}
 
-	private static Image map( ResultSet resultSet ) throws SQLException {
-		Image image = new Image();
-		image.setId( resultSet.getLong( "id" ) );
-		image.setPath( resultSet.getString( "path" ) );
+	private static ImageDto map( ResultSet resultSet ) throws SQLException {
 		
-		ProduitServiceInterface produitService = new ProduitServiceImpl(DaoFactory.getInstance());
-		Produit produit = produitService.readProduit( resultSet.getLong("produit_id") );
+		ImageDto imageDto = new ImageDto();
 		
-		image.setProduit(produit);
+		imageDto.setImageId( resultSet.getInt( "image_id" ) );
+		imageDto.setPath( resultSet.getString( "path" ) );
 		
-		return image;
+		return imageDto;
+		
 	}
 	
 	@Override
-	public Image createImage(Image image) {
+	public ImageDto createImage( ImageDto imageDto ) throws NotFoundException{
 		
 		final String SQL_INSERT = "INSERT INTO image ( path , produit_id ) VALUES (  ? , ? ) ";
-		final String SQL_SELECT_MAX = " SELECT max(id) as max_id from image ";
-		
-		Connection connexion = null;
-		PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
 	    
-	    try {
-			
-	    	connexion = daoFactory.getConnection();
-	    	
-	    	preparedStatement = RequestPrepare.initRequestPrepare( connexion , SQL_INSERT , image.getPath() , image.getProduit().getId() );
+	    try (
+	    		Connection connexion = daoFactory.getConnection();
+	    		PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( 
+	    			connexion , 
+	    			SQL_INSERT , 
+	    			imageDto.getPath() , 
+	    			imageDto.getProduit().getProduitId() 
+	    		);
+	    	)
+	    {
 	    	preparedStatement.executeUpdate();
-	    	
-	    	PreparedStatement ps2 = RequestPrepare.initRequestPrepare( connexion , SQL_SELECT_MAX );
-	        resultSet = ps2.executeQuery();
-	    	
-	        if(resultSet.next()) {
-				
-				image.setId(resultSet.getLong("max_id"));
-				
-			}
 	        
 		} catch (SQLException e) {
 			throw new DaoException( e );
 		}
 		
-		return image;
+		return getLastImages();
 	}
 
 	@Override
-	public Image readImage(Long id) {
+	public ImageDto readImage(Integer id) {
 		
-		final String SQL_SELECT_PAR_ID = "SELECT id , path , produit_id FROM image WHERE id = ?";
+		final String SQL_SELECT_PAR_ID = "SELECT image_id , path , produit_id FROM image WHERE image_id = ?";
 		
-		Connection connexion = null;
-	    PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
-		
-	    Image image = new Image();
+	    ImageDto imageDto = new ImageDto();
 	    
-	    try {
-			
-	    	connexion = daoFactory.getConnection();
-	        preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_SELECT_PAR_ID, id );
-	        resultSet = preparedStatement.executeQuery();
+	    try (
+	    		Connection connexion = daoFactory.getConnection();
+	    	    PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_SELECT_PAR_ID, id );
+	    	    ResultSet resultSet = preparedStatement.executeQuery();
+	    	)
+	    {
 	        
 	        if ( resultSet.next() ) {
 	        	
-	        	image = map( resultSet );
+	        	imageDto = map( resultSet );
 	            
 	        }
 	        
@@ -99,45 +84,52 @@ public class ImageServiceImpl implements ImageServiceInterface {
 			
 		}
 	    
-		return image;
+		return imageDto;
 	}
 
 	@Override
-	public Image updateImage(Image image) {
+	public ImageDto updateImage(ImageDto imageDto) throws NotFoundException {
 
-final String SQL_UPDATE = "UPDATE image SET path = ? where id = ? ";
+		ImageDto dto = this.readImage(imageDto.getImageId());
 		
-		Connection connexion = null;
-		PreparedStatement preparedStatement = null;
-		
-		try {
+		if ( dto.getImageId() !=null) {
+			final String SQL_UPDATE = "UPDATE image SET path = ? where image_id = ? ";
 			
-			connexion = daoFactory.getConnection();
-			
-			preparedStatement = RequestPrepare.initRequestPrepare(connexion, SQL_UPDATE, image.getPath(),image.getId());
-			preparedStatement.executeUpdate();
-			
-			
-			
-		} catch (SQLException e) {
-			
-			throw new DaoException( e );
-			
+			try (
+					Connection connexion = daoFactory.getConnection();
+					PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare(
+						connexion, 
+						SQL_UPDATE, 
+						imageDto.getPath(),
+						imageDto.getImageId()
+					);
+				)
+			{
+				
+				preparedStatement.executeUpdate();
+
+			} catch (SQLException e) {
+				
+				throw new DaoException( e );
+				
+			}
+			return imageDto;
+		}else {
+			throw new EntityNotFoundException("Image Not found");
 		}
-		return image;
 	}
 
 	@Override
-	public void deleteImage(Long id) {
-final String SQL_DESTROY = " Delete from image where id=? ";
+	public void deleteImage(Integer id) {
+
+		final String SQL_DESTROY = " Delete from image where image_id=? ";
 		
-		Connection connexion = null;
-		PreparedStatement preparedStatement = null;
-		
-		try {
+		try (
+				Connection connexion = daoFactory.getConnection();
+				PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_DESTROY , id );
+			)
+		{
 			
-			connexion = daoFactory.getConnection();
-	        preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_DESTROY , id );
 	        preparedStatement.execute();
 			
 		} catch (SQLException e) {
@@ -148,26 +140,24 @@ final String SQL_DESTROY = " Delete from image where id=? ";
 	}
 
 	@Override
-	public List<Image> getAllImages() {
+	public List<ImageDto> getAllImages() {
 		
-		final String SQL_SELECT_ALL = "SELECT id , path , produit_id FROM image";
-		
-		Connection connexion = null;
-		PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
+		final String SQL_SELECT_ALL = "SELECT image_id , path , produit_id FROM image";
+
+	    ImageDto imageDto = new ImageDto();
+	    List<ImageDto> images = new ArrayList<ImageDto>();
 	    
-	    Image image = new Image();
-	    List<Image> images = new ArrayList<Image>();
+	    try (
+	    		Connection connexion = daoFactory.getConnection();
+	    		PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare(connexion, SQL_SELECT_ALL );
+	    	    ResultSet resultSet = preparedStatement.executeQuery();
+	    	)
 	    
-try {
-			
-	    	connexion = daoFactory.getConnection();
-	    	preparedStatement = RequestPrepare.initRequestPrepare(connexion, SQL_SELECT_ALL );
-	    	resultSet = preparedStatement.executeQuery();
+	    {
 	    	
 	    	while ( resultSet.next() ) {
-	            image = map( resultSet );
-	            images.add(image);
+	            imageDto = map( resultSet );
+	            images.add(imageDto);
 	        }
 	    	
 		} catch (SQLException e) {
@@ -179,4 +169,61 @@ try {
 		return images;
 	}
 
+	
+	@Override
+	public List<ImageDto> getImagesByProduit(Integer produitId) {
+		
+		final String SQL_SELECT_BY_PRODUIT = "SELECT image_id , path , produit_id FROM image where produit_id = ? ";
+	    
+	    ImageDto imageDto = new ImageDto();
+	    List<ImageDto> images = new ArrayList<ImageDto>();
+	    
+	    try (
+	    		Connection connexion = daoFactory.getConnection();
+	    		PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare(connexion, SQL_SELECT_BY_PRODUIT , produitId );
+	    	    ResultSet resultSet = preparedStatement.executeQuery();
+	    	)
+	    {
+	    	
+	    	while ( resultSet.next() ) {
+	            imageDto = map( resultSet );
+	            images.add(imageDto);
+	        }
+	    	
+		} catch (SQLException e) {
+			
+			throw new DaoException( e );
+			
+		}
+		
+		return images;
+	}
+
+	@Override
+	public ImageDto getLastImages() {
+		
+		final String SQL_SELECT_MAX = " SELECT max(image_id) as max_id from image ";
+	    
+	    Integer imageId = null ;
+	    try (
+	    		Connection connexion = daoFactory.getConnection();
+	    	    PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_SELECT_MAX );
+	    	    ResultSet resultSet = preparedStatement.executeQuery();
+	    	)
+	    
+	    {
+	        
+	        if ( resultSet.next() ) {
+	        	
+	        	imageId = resultSet.getInt("max_id");
+	            
+	        }
+		} catch (SQLException e) {
+
+			throw new DaoException( e );
+			
+		}
+	    return readImage(imageId);
+	}
+	
 }

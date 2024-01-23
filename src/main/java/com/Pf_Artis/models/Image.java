@@ -2,7 +2,10 @@ package com.Pf_Artis.models;
 
 import java.io.Serializable;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -28,7 +31,9 @@ public class Image implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	Long id;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(nullable = false,name = "image_id")
+	Integer imageId;
 	
 	String path;
 	

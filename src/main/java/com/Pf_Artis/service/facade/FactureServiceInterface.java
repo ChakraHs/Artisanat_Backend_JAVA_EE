@@ -2,15 +2,20 @@ package com.Pf_Artis.service.facade;
 
 import java.util.List;
 
-import com.Pf_Artis.models.Facture;
+import javax.ws.rs.NotFoundException;
+
+import com.Pf_Artis.dto.FactureDto;
 
 public interface FactureServiceInterface {
 
-	public Facture createFacture(Facture facture);
-    public Facture readFacture(Long id);
-    public Facture updateFacture(Facture facture);
-    public void deleteFacture(Long id);
+	public FactureDto createFacture(FactureDto factureDto)throws NotFoundException;
+	
+    public FactureDto readFacture(Integer id);
     
-    public List<Facture> getAllFactures();
+    public FactureDto updateFacture(FactureDto factureDto)throws NotFoundException;
+    
+    public void deleteFacture(Integer id);
+    
+    public List<FactureDto> getAllFactures();
 	
 }

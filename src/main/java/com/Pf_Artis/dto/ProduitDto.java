@@ -1,6 +1,7 @@
 package com.Pf_Artis.dto;
 
 import java.util.Date;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -16,6 +17,8 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 public class ProduitDto {
 
+	Integer produitId;
+	
 	String nom;
 	
 	String description;
@@ -32,6 +35,10 @@ public class ProduitDto {
 	
 	double poids;
 	
-	Long store_id;
+	StoreDto store;
+	
+	List<ImageDto> images;
+	
+	List<CategoryDto> categorys;
 	
 }

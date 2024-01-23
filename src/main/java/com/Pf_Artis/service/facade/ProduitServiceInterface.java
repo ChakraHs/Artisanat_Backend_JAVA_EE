@@ -2,15 +2,22 @@ package com.Pf_Artis.service.facade;
 
 import java.util.List;
 
-import com.Pf_Artis.models.Produit;
+import javax.ws.rs.NotFoundException;
+
+import com.Pf_Artis.dto.ProduitDto;
 
 public interface ProduitServiceInterface {
 
-	public Produit createProduit(Produit produit);
-    public Produit readProduit(Long id);
-    public Produit updateProduit(Produit produit);
-    public void deleteProduit(Long id);
+	public ProduitDto createProduit(ProduitDto produitDto)throws NotFoundException;
+	
+    public ProduitDto readProduit(Integer id);
     
-    public List<Produit> getAllProduits();
+    public ProduitDto updateProduit(ProduitDto produitDto)throws NotFoundException;
+    
+    public void deleteProduit(Integer id);
+    
+    public List<ProduitDto> getAllProduits();
+    
+    public ProduitDto getLastProduits();
     
 }

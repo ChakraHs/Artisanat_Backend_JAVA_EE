@@ -7,72 +7,84 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ws.rs.NotFoundException;
+
 import com.Pf_Artis.dao.DaoException;
 import com.Pf_Artis.dao.DaoFactory;
 import com.Pf_Artis.dao.RequestPrepare;
-import com.Pf_Artis.models.Commande;
-import com.Pf_Artis.models.LigneCommande;
+import com.Pf_Artis.dto.CommandeDto;
+import com.Pf_Artis.dto.LigneCommandeDto;
+import com.Pf_Artis.dto.ProduitDto;
+import com.Pf_Artis.exception.EntityNotFoundException;
 import com.Pf_Artis.models.LigneCommandeKey;
-import com.Pf_Artis.models.Produit;
 import com.Pf_Artis.service.facade.CommandeServiceInterface;
 import com.Pf_Artis.service.facade.LigneCommandeServiceInterface;
 import com.Pf_Artis.service.facade.ProduitServiceInterface;
 
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
 public class LigneCommandeServiceImpl implements LigneCommandeServiceInterface {
 
 	private DaoFactory daoFactory;
 	
-	public LigneCommandeServiceImpl(DaoFactory daoFactory) {
-		super();
-		this.daoFactory = daoFactory;
-	}
-	
-	private static LigneCommande map( ResultSet resultSet ) throws SQLException {
-		LigneCommande ligneCommande = new LigneCommande();
+	private static LigneCommandeDto map( ResultSet resultSet ) throws SQLException {
 		
+		LigneCommandeDto ligneCommandeDto = new LigneCommandeDto();
 		LigneCommandeKey ligneCommandeKey = new LigneCommandeKey();
 		
-		ligneCommandeKey.setCommandeId( resultSet.getLong( "commande_id" ) );
-		ligneCommandeKey.setProduitId( resultSet.getLong( "produit_id" ) );
+		ligneCommandeKey.setCommandeId( resultSet.getInt( "commande_id" ) );
+		ligneCommandeKey.setProduitId( resultSet.getInt( "produit_id" ) );
 		
 		ProduitServiceInterface produitService = new ProduitServiceImpl(DaoFactory.getInstance());
-		Produit produit = produitService.readProduit( resultSet.getLong( "produit_id" ) );
+		ProduitDto produitDto = produitService.readProduit( resultSet.getInt( "produit_id" ) );
 		
 		CommandeServiceInterface commandeService = new CommandeServiceImpl( DaoFactory.getInstance() );
-		Commande commande = commandeService.readCommande( resultSet.getLong( "commande_id" ) );
+		CommandeDto commandeDto = commandeService.readCommande( resultSet.getInt( "commande_id" ) );
 		
-		ligneCommande.setCommande(commande);
-		ligneCommande.setProduit(produit);
-		ligneCommande.setId(ligneCommandeKey);
-		ligneCommande.setPrixUnitaire( resultSet.getDouble( "prixUnitaire" ) );
-		ligneCommande.setQuantite( resultSet.getDouble( "quantite" ) );
+		ligneCommandeDto.setCommande(commandeDto);
+		ligneCommandeDto.setProduit(produitDto);
+		ligneCommandeDto.setId(ligneCommandeKey);
+		ligneCommandeDto.setPrixUnitaire( resultSet.getDouble( "prixUnitaire" ) );
+		ligneCommandeDto.setQuantite( resultSet.getDouble( "quantite" ) );
 		
-		return ligneCommande;
+		return ligneCommandeDto;
 	}
 	
 	@Override
-	public LigneCommande createLigneCommande(LigneCommande ligneCommande) {
+	public LigneCommandeDto createLigneCommande( LigneCommandeDto ligneCommandeDto )throws NotFoundException {
 
-		final String SQL_INSERT = "INSERT INTO line_commande ( commande_id , produit_id , prixUnitaire , quantite ) VALUES ( ? , ? , ? , ? ) ";
+		ProduitServiceInterface produitService = new ProduitServiceImpl(DaoFactory.getInstance());
+		ProduitDto produitDto = produitService.readProduit( ligneCommandeDto.getProduit().getProduitId() );
 		
-		Connection connexion = null;
-		PreparedStatement preparedStatement = null;
-	    
-	    try {
-	    	connexion = daoFactory.getConnection();
-	    	
-	    	preparedStatement = RequestPrepare.initRequestPrepare( connexion , SQL_INSERT , ligneCommande.getId().getCommandeId() , ligneCommande.getId().getProduitId() , ligneCommande.getPrixUnitaire() , ligneCommande.getQuantite() );
-	        preparedStatement.executeUpdate();
-	    	
-		} catch (SQLException e) {
-			throw new DaoException( e );
-		}
+		CommandeServiceInterface commandeService = new CommandeServiceImpl( DaoFactory.getInstance() );
+		CommandeDto commandeDto = commandeService.readCommande( ligneCommandeDto.getCommande().getCommandeId() );
+		
+		if( commandeDto.getCommandeId() != null && produitDto.getProduitId()!=null ) {
 
-		return ligneCommande;
+			final String SQL_INSERT = "INSERT INTO line_commande ( commande_id , produit_id , prixUnitaire , quantite ) VALUES ( ? , ? , ? , ? ) ";
+			
+			Connection connexion = null;
+			PreparedStatement preparedStatement = null;
+		    
+		    try {
+		    	connexion = daoFactory.getConnection();
+		    	
+		    	preparedStatement = RequestPrepare.initRequestPrepare( connexion , SQL_INSERT , ligneCommandeDto.getId().getCommandeId() , ligneCommandeDto.getId().getProduitId() , ligneCommandeDto.getPrixUnitaire() , ligneCommandeDto.getQuantite() );
+		        preparedStatement.executeUpdate();
+		    	
+			} catch (SQLException e) {
+				throw new DaoException( e );
+			}
+
+			return ligneCommandeDto;
+		}else {
+			throw new EntityNotFoundException("Image Not found");
+		}
 	}
 
 	@Override
-	public LigneCommande readLigneCommande( LigneCommandeKey ligneCommandeKey ) {
+	public LigneCommandeDto readLigneCommande( LigneCommandeKey ligneCommandeKey ) {
 		
 		final String SQL_SELECT_PAR_ID = "SELECT commande_id , produit_id , prixUnitaire , quantite FROM line_commande  WHERE commande_id = ? and produit_id = ? ";
 		
@@ -80,7 +92,7 @@ public class LigneCommandeServiceImpl implements LigneCommandeServiceInterface {
 	    PreparedStatement preparedStatement = null;
 	    ResultSet resultSet = null;
 	    
-	    LigneCommande ligneCommande = new LigneCommande();
+	    LigneCommandeDto ligneCommandeDto = new LigneCommandeDto();
 	    
 	    try {
 	    	
@@ -90,7 +102,7 @@ public class LigneCommandeServiceImpl implements LigneCommandeServiceInterface {
 	        
 	        if ( resultSet.next() ) {
 	        	
-	        	ligneCommande = map( resultSet );
+	        	ligneCommandeDto = map( resultSet );
 	            
 	        }
 		} catch (SQLException e) {
@@ -98,30 +110,34 @@ public class LigneCommandeServiceImpl implements LigneCommandeServiceInterface {
 			throw new DaoException( e );
 			
 		}
-		return ligneCommande ;
+		return ligneCommandeDto ;
 	}
 
 	@Override
-	public LigneCommande updateLigneCommande(LigneCommande ligneCommande) {
+	public LigneCommandeDto updateLigneCommande(LigneCommandeDto ligneCommandeDto) throws NotFoundException {
 
-		final String SQL_UPDATE = "UPDATE line_commande SET prixUnitaire = ? , quantite = ? where commande_id = ? and produit_id = ? ";
-		
-		Connection connexion = null;
-		PreparedStatement preparedStatement = null;
-		
-		try {
+		if(this.readLigneCommande(ligneCommandeDto.getId())!=null) {
+			final String SQL_UPDATE = "UPDATE line_commande SET prixUnitaire = ? , quantite = ? where commande_id = ? and produit_id = ? ";
 			
-			connexion = daoFactory.getConnection();
+			Connection connexion = null;
+			PreparedStatement preparedStatement = null;
 			
-	        preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_UPDATE  , ligneCommande.getPrixUnitaire() , ligneCommande.getQuantite() , ligneCommande.getId().getCommandeId() , ligneCommande.getId().getProduitId()  );
-	        preparedStatement.executeUpdate();
-			
-		} catch (SQLException e) {
-			
-			throw new DaoException( e );
-			
+			try {
+				
+				connexion = daoFactory.getConnection();
+				
+		        preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_UPDATE  , ligneCommandeDto.getPrixUnitaire() , ligneCommandeDto.getQuantite() , ligneCommandeDto.getId().getCommandeId() , ligneCommandeDto.getId().getProduitId()  );
+		        preparedStatement.executeUpdate();
+				
+			} catch (SQLException e) {
+				
+				throw new DaoException( e );
+				
+			}
+			return ligneCommandeDto;
+		}else {
+			throw new EntityNotFoundException("Ligne Commande Not found");
 		}
-		return ligneCommande;
 	}
 
 	@Override
@@ -147,7 +163,7 @@ public class LigneCommandeServiceImpl implements LigneCommandeServiceInterface {
 	}
 
 	@Override
-	public List<LigneCommande> getAllLigneCommandes() {
+	public List<LigneCommandeDto> getAllLigneCommandes() {
 
 		final String SQL_SELECT_ALL = " SELECT commande_id , produit_id , prixUnitaire , quantite FROM line_commande";
 		
@@ -155,8 +171,8 @@ public class LigneCommandeServiceImpl implements LigneCommandeServiceInterface {
 		PreparedStatement preparedStatement = null;
 	    ResultSet resultSet = null;
 		
-	    LigneCommande ligneCommande = new LigneCommande();
-	    List<LigneCommande> ligneCommandes = new ArrayList<LigneCommande>();
+	    LigneCommandeDto ligneCommandeDto = new LigneCommandeDto();
+	    List<LigneCommandeDto> ligneCommandes = new ArrayList<LigneCommandeDto>();
 	    
 	    try {
 	    	connexion = daoFactory.getConnection();
@@ -164,8 +180,8 @@ public class LigneCommandeServiceImpl implements LigneCommandeServiceInterface {
 	        resultSet = preparedStatement.executeQuery();
 	        
 	        while ( resultSet.next() ) {
-	        	ligneCommande = map( resultSet );
-	        	ligneCommandes.add(ligneCommande);
+	        	ligneCommandeDto = map( resultSet );
+	        	ligneCommandes.add(ligneCommandeDto);
 	        }
 		} catch (SQLException e) {
 			

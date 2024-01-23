@@ -2,20 +2,25 @@ package com.Pf_Artis.service.facade;
 
 import java.util.List;
 
-import com.Pf_Artis.models.User;
+import javax.ws.rs.NotFoundException;
+
+import com.Pf_Artis.dto.UserDto;
 
 
 
 public interface UserServiceInterface {
 
-	public User createUser(User user);
-    public User readUser(Long id);
-    public User updateUser(User user);
-    public void deleteUser(Long id);
+	public UserDto createUser(UserDto userDto) throws NotFoundException;
+	
+    public UserDto readUser(Integer id);
     
-    public List<User> getAllUsers();
+    public UserDto updateUser(UserDto userDto);
     
-    public User getUserByEmail( String email );
+    public void deleteUser(Integer id);
+    
+    public List<UserDto> getAllUsers();
+    
+    public UserDto getUserByEmail( String email );
     
     public void close();
 	

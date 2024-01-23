@@ -20,9 +20,9 @@ public class LigneCommandeKey implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Column(name = "produit_id")
-	Long produitId;
+	Integer produitId;
 	
 	@Column(name = "commande_id")
-	Long commandeId;
+	Integer commandeId;
 	
 }

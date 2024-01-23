@@ -10,6 +10,8 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
@@ -34,8 +36,8 @@ public class User implements Serializable{
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(nullable = false)
-	Long id;
+	@Column(nullable = false,name = "user_id")
+	Integer userId;
 	
 	@Column(nullable = false)
 	String nom;
@@ -44,7 +46,13 @@ public class User implements Serializable{
 	String prenom;
 	
 	@Column(nullable = false)
-	String adresse;
+	String ville;
+	
+	@Column(nullable = false)
+	String rue;
+	
+	@Column(nullable = false)
+	String numero;
 	
 	@Column(nullable = false)
 	String telephone;
@@ -57,8 +65,9 @@ public class User implements Serializable{
 	@Column(nullable = false)
     String password;
 	
-	@Column(nullable = false)
-    String role;
+	@ManyToOne()
+	@JoinColumn(name = "role_id")
+	Role role;
 	
 	@Column(nullable = false)
 	String token;

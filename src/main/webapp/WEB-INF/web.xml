@@ -36,4 +36,14 @@
       <http-method>POST</http-method>
     </web-resource-collection>
   </security-constraint>
+  <servlet>
+    <description></description>
+    <display-name>ImageTestController</display-name>
+    <servlet-name>ImageTestController</servlet-name>
+    <servlet-class>com.Pf_Atis.controller.ImageTestController</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ImageTestController</servlet-name>
+    <url-pattern>/ImageTestController</url-pattern>
+  </servlet-mapping>
 </web-app>

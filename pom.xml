@@ -1,4 +1,4 @@
-	<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.Pf_Artis</groupId>
   <artifactId>Pf_Artis</artifactId>
@@ -6,6 +6,28 @@
   <name>Pf_Artis</name>
   <description>Pf_Artisanat</description>
   <url>http://maven.apache.org</url>
+  
+  
+  <build>
+        <plugins>
+            <!-- Configure the SonarQube plugin -->
+            <plugin>
+            <groupId>org.sonarsource.scanner.maven</groupId>
+            <artifactId>sonar-maven-plugin</artifactId>
+            <version>3.10.0.2594</version>
+        </plugin>
+        </plugins>
+    </build>
+
+    <!-- Configure SonarQube properties -->
+    <properties>
+        <sonar.host.url>http://localhost:9000</sonar.host.url>
+        <sonar.login>admin</sonar.login>
+        <sonar.password>ismail2001</sonar.password>
+    </properties>
+  
+  
+  
   <dependencies>
 	<!-- https://mvnrepository.com/artifact/jakarta.platform/jakarta.jakartaee-api -->
 	<dependency>
@@ -26,6 +48,8 @@
 	    <artifactId>hibernate-core</artifactId>
 	    <version>5.6.12.Final</version>
 	</dependency>
+
+
 
 	<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
 	<dependency>
@@ -51,5 +75,6 @@
     	<version>8.0</version>
     	<scope>provided</scope>
   	</dependency>
+
   </dependencies>
 </project>

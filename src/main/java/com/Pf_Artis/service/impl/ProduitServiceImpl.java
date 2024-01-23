@@ -1,4 +1,4 @@
-package com.Pf_Artis.service.impl;
+	package com.Pf_Artis.service.impl;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -7,95 +7,110 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ws.rs.NotFoundException;
+
 import com.Pf_Artis.dao.DaoException;
 import com.Pf_Artis.dao.DaoFactory;
 import com.Pf_Artis.dao.RequestPrepare;
-import com.Pf_Artis.models.Produit;
-import com.Pf_Artis.models.Store;
+import com.Pf_Artis.dto.ImageDto;
+import com.Pf_Artis.dto.ProduitDto;
+import com.Pf_Artis.dto.StoreDto;
+import com.Pf_Artis.exception.EntityNotFoundException;
+import com.Pf_Artis.service.facade.ImageServiceInterface;
 import com.Pf_Artis.service.facade.ProduitServiceInterface;
 import com.Pf_Artis.service.facade.StoreServiceInterface;
 
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
 public class ProduitServiceImpl implements ProduitServiceInterface {
 
 	private DaoFactory daoFactory;
-	
-	public ProduitServiceImpl(DaoFactory daoFactory) {
-		super();
-		this.daoFactory = daoFactory;
-	}
 
-	private static Produit map( ResultSet resultSet ) throws SQLException {
+	private static ProduitDto map( ResultSet resultSet ) throws SQLException {
 		
-		Produit produit = new Produit();
-		produit.setId( resultSet.getLong( "id" ) );
-		produit.setNom( resultSet.getString( "nom" ) );
-		produit.setDateFabrication( resultSet.getDate( "date_fabrication" ) );
-		produit.setDatePeremption( resultSet.getDate( "date_peremption" ) );
-		produit.setDescription( resultSet.getString( "description" ) );
-		produit.setPoids( resultSet.getDouble( "poids" ) );
-		produit.setPrix( resultSet.getDouble( "prix" ) );
-		produit.setStock( resultSet.getInt( "stock" ) );
+		ProduitDto produitDto = new ProduitDto();
+		produitDto.setProduitId( resultSet.getInt( "produit_id" ) );
+		produitDto.setNom( resultSet.getString( "nom" ) );
+		produitDto.setDate_fabrication( resultSet.getDate( "date_fabrication" ) );
+		produitDto.setDate_peremption( resultSet.getDate( "date_peremption" ) );
+		produitDto.setDescription( resultSet.getString( "description" ) );
+		produitDto.setPoids( resultSet.getDouble( "poids" ) );
+		produitDto.setPrix( resultSet.getDouble( "prix" ) );
+		produitDto.setStock( resultSet.getInt( "stock" ) );
 		
 		StoreServiceInterface serviceInterface = new StoreServiceImpl( DaoFactory.getInstance() );
-		Store store = serviceInterface.readStore( resultSet.getLong( "store_id" ) );
+		StoreDto storeDto = serviceInterface.readStore( resultSet.getInt( "store_id" ) );
 		
-		produit.setStore(store);
+		ImageServiceInterface imageService = new ImageServiceImpl( DaoFactory.getInstance() );
+		List<ImageDto> images = imageService.getImagesByProduit(resultSet.getInt( "produit_id" ));
 		
-		return produit;
+		produitDto.setStore(storeDto);
+		produitDto.setImages(images);
+		
+		return produitDto;
 	}
 	
 	@Override
-	public Produit createProduit(Produit produit) {
+	public ProduitDto createProduit(ProduitDto produitDto)throws NotFoundException {
 
 		final String SQL_INSERT = "INSERT INTO produit ( date_fabrication , date_peremption , description , nom , poids , prix , stock , store_id ) VALUES (  ? , ? , ? , ? , ? , ? , ? , ? ) ";
-		final String SQL_SELECT_MAX = " SELECT max(id) as max_id from produit ";
-		
-		Connection connexion = null;
-		PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
-	    
-	    try {
-	    	connexion = daoFactory.getConnection();
-	    	
-	    	preparedStatement = RequestPrepare.initRequestPrepare( connexion , SQL_INSERT , produit.getDateFabrication() , produit.getDatePeremption() , produit.getDescription() , produit.getNom() , produit.getPoids() , produit.getPrix() , produit.getStock() , produit.getStore().getId()  );
-	        preparedStatement.executeUpdate();
-	        
-	        PreparedStatement ps2 = RequestPrepare.initRequestPrepare( connexion , SQL_SELECT_MAX );
-	        resultSet = ps2.executeQuery();
-	        
-	        if(resultSet.next()) {
-				
-				produit.setId(resultSet.getLong("max_id"));
-				
-			}
-	    	
-		} catch (SQLException e) {
-			throw new DaoException( e );
-		}
 
-		return produit;
+		StoreServiceInterface serviceInterface = new StoreServiceImpl( DaoFactory.getInstance() );
+		StoreDto storeDto = serviceInterface.readStore( produitDto.getStore().getStoreId() );
+		
+		if(storeDto.getStoreId()!=null) {
+		    
+		    try (
+		    		Connection connexion = daoFactory.getConnection();
+					PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( 
+		    			connexion , 
+		    			SQL_INSERT , 
+		    			produitDto.getDate_fabrication() , 
+		    			produitDto.getDate_peremption() , 
+		    			produitDto.getDescription() , 
+		    			produitDto.getNom() , 
+		    			produitDto.getPoids() , 
+		    			produitDto.getPrix() , 
+		    			produitDto.getStock() , 
+		    			produitDto.getStore().getStoreId()  
+		    		);
+		    	)
+		    {
+		        preparedStatement.executeUpdate();
+			
+		    } catch (SQLException e) {
+				throw new DaoException( e );
+			}
+		    
+			return getLastProduits();
+		}else {
+			
+			throw new EntityNotFoundException("Store Not found");
+			
+		}
 	}
 
+	
 	@Override
-	public Produit readProduit(Long id) {
+	public ProduitDto readProduit(Integer id) {
 		
-		final String SQL_SELECT_PAR_ID = " SELECT id , date_fabrication , date_peremption , description , nom , poids , prix , stock , store_id FROM produit WHERE id = ? ";
-		
-		Connection connexion = null;
-	    PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
+		final String SQL_SELECT_PAR_ID = " SELECT produit_id , date_fabrication , date_peremption , description , nom , poids , prix , stock , store_id FROM produit WHERE produit_id = ? ";
 	    
-	    Produit produit = new Produit();
 	    
-	    try {
+	    ProduitDto produitDto = new ProduitDto();
+	    
+	    try (
+	    		Connection connexion = daoFactory.getConnection();
+	    	    PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_SELECT_PAR_ID, id );
+	    	    ResultSet resultSet = preparedStatement.executeQuery();
+	    	)
+	    {
 	    	
-	    	connexion = daoFactory.getConnection();
-	        preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_SELECT_PAR_ID, id );
-	        resultSet = preparedStatement.executeQuery();
-	        
 	        if ( resultSet.next() ) {
 	        	
-	        	produit = map( resultSet );
+	        	produitDto = map( resultSet );
+	        	
 	            
 	        }
 		} catch (SQLException e) {
@@ -104,45 +119,61 @@ public class ProduitServiceImpl implements ProduitServiceInterface {
 			
 		}
 		
-		return produit;
+		return produitDto;
 	}
 
 	@Override
-	public Produit updateProduit(Produit produit) {
+	public ProduitDto updateProduit(ProduitDto produitDto) throws NotFoundException {
 
-		final String SQL_UPDATE = "UPDATE produit SET date_fabrication = ? , date_peremption = ? , description = ?  , nom = ?  , poids = ?  , prix = ?  , stock = ? where id = ? ";
-		
-		Connection connexion = null;
-		PreparedStatement preparedStatement = null;
-		
-		try {
+		if(this.readProduit(produitDto.getProduitId())!=null) {
+
+			final String SQL_UPDATE = "UPDATE produit SET date_fabrication = ? , date_peremption = ? , description = ?  , nom = ?  , poids = ?  , prix = ?  , stock = ? where produit_id = ? ";
 			
-			connexion = daoFactory.getConnection();
-			
-	        preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_UPDATE  , produit.getDateFabrication() , produit.getDatePeremption() , produit.getDescription() , produit.getNom() , produit.getPoids() , produit.getPrix() , produit.getStock() , produit.getId() );
-	        preparedStatement.executeUpdate();
-			
-		} catch (SQLException e) {
-			
-			throw new DaoException( e );
-			
+			try (
+					Connection connexion = daoFactory.getConnection();
+					PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( 
+						connexion, 
+						SQL_UPDATE  , 
+						produitDto.getDate_fabrication() , 
+						produitDto.getDate_peremption() , 
+						produitDto.getDescription() , 
+						produitDto.getNom() , 
+						produitDto.getPoids() , 
+						produitDto.getPrix() , 
+						produitDto.getStock() , 
+						produitDto.getProduitId() 
+					);
+				)
+			{
+				
+		        preparedStatement.executeUpdate();
+				
+			} catch (SQLException e) {
+				
+				throw new DaoException( e );
+				
+			}
+			return produitDto;
+		}else {
+			throw new EntityNotFoundException("Image Not found");
 		}
-		return produit;
 	}
 
 	@Override
-	public void deleteProduit(Long id) {
+	public void deleteProduit(Integer id) {
 		
+		final String SQL_DESTROY = " Delete from produit where produit_id=? ";
+		
+		try (
+				Connection connexion = daoFactory.getConnection();
+				PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( 
+					connexion, 
+					SQL_DESTROY , 
+					id
+				);
+			)
+		{
 
-		final String SQL_DESTROY = " Delete from produit where id=? ";
-		
-		Connection connexion = null;
-		PreparedStatement preparedStatement = null;
-		
-		try {
-			
-			connexion = daoFactory.getConnection();
-	        preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_DESTROY , id );
 	        preparedStatement.execute();
 			
 		} catch (SQLException e) {
@@ -155,31 +186,58 @@ public class ProduitServiceImpl implements ProduitServiceInterface {
 	}
 
 	@Override
-	public List<Produit> getAllProduits() {
+	public List<ProduitDto> getAllProduits() {
 
-		final String SQL_SELECT_ALL = "SELECT id , date_fabrication , date_peremption , description , nom , poids , prix , stock , store_id FROM produit";
+		final String SQL_SELECT_ALL = "SELECT produit_id , date_fabrication , date_peremption , description , nom , poids , prix , stock , store_id FROM produit";
 		
-		Connection connexion = null;
-		PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
-		
-	    Produit produit = new Produit();
-	    List<Produit> produits = new ArrayList<Produit>();
+	    ProduitDto produitDto = new ProduitDto();
+	    List<ProduitDto> produits = new ArrayList<ProduitDto>();
 	    
-	    try {
-	    	
-	    	connexion = daoFactory.getConnection();
-	        preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_SELECT_ALL);
-	        resultSet = preparedStatement.executeQuery();
+	    try (
+	    		Connection connexion = daoFactory.getConnection();
+	    		PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( 
+	    			connexion, 
+	    			SQL_SELECT_ALL
+	    		);
+	    	    ResultSet resultSet = preparedStatement.executeQuery();
+	    	)
+	    {
 	        
 	        while ( resultSet.next() ) {
-	        	produit = map( resultSet );
-	        	produits.add( produit );
+	        	produitDto = map( resultSet );
+	        	produits.add( produitDto );
 	        }
 		} catch (SQLException e) {
 			throw new DaoException( e );	
 		}
 		return produits;
+	}
+
+	
+	@Override
+	public ProduitDto getLastProduits() {
+		
+		final String SQL_SELECT_MAX = " SELECT max(produit_id) as max_id from produit ";
+		
+	    Integer produitId = null ;
+	    try (
+	    		Connection connexion = daoFactory.getConnection();
+	    	    PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_SELECT_MAX );
+	    	    ResultSet resultSet = preparedStatement.executeQuery();	
+	    	)
+	    {
+	        
+	        if ( resultSet.next() ) {
+	        	
+	        	produitId = resultSet.getInt("max_id");
+	            
+	        }
+		} catch (SQLException e) {
+
+			throw new DaoException( e );
+			
+		}
+	    return readProduit(produitId);
 	}
 
 }
