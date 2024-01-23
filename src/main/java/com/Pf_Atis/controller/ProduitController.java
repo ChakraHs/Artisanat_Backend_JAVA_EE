@@ -24,12 +24,15 @@ import java.util.UUID;
 
 import com.Pf_Artis.dao.DaoFactory;
 import com.Pf_Artis.dto.ImageDto;
+import com.Pf_Artis.dto.LigneCommandeDto;
 import com.Pf_Artis.dto.ProduitDto;
 import com.Pf_Artis.dto.StoreDto;
 import com.Pf_Artis.service.facade.ImageServiceInterface;
+import com.Pf_Artis.service.facade.LigneCommandeServiceInterface;
 import com.Pf_Artis.service.facade.ProduitServiceInterface;
 import com.Pf_Artis.service.facade.StoreServiceInterface;
 import com.Pf_Artis.service.impl.ImageServiceImpl;
+import com.Pf_Artis.service.impl.LigneCommandeServiceImpl;
 import com.Pf_Artis.service.impl.ProduitServiceImpl;
 import com.Pf_Artis.service.impl.StoreServiceImpl;
 import com.Pf_Artis.shared.ErrorMessage;
@@ -43,10 +46,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class ProduitController extends HttpServlet {
 	
 	private static final long serialVersionUID = 1L;
-	private static final String SAVE_DIRECTORY = "assets\\images";
+	private static final String SAVE_DIRECTORY = "assets\\images\\produits";
 	private ProduitServiceInterface produitService;
 	private StoreServiceInterface storeService;
 	private ImageServiceInterface imageService;
+	private LigneCommandeServiceInterface ligneCommandeService ;
 	private ObjectMapper objectMapper = new ObjectMapper();
 	
     /**
@@ -64,6 +68,7 @@ public class ProduitController extends HttpServlet {
     	produitService = new ProduitServiceImpl(daoFactory);
     	storeService = new StoreServiceImpl(daoFactory);
     	imageService = new ImageServiceImpl(daoFactory);
+    	ligneCommandeService = new LigneCommandeServiceImpl(daoFactory);
     	
     }
 
@@ -477,6 +482,11 @@ public class ProduitController extends HttpServlet {
 				    e.printStackTrace();
 				    System.out.println("Error deleting old image");
 				}
+        	}
+        	
+        	List<LigneCommandeDto> ligneCommandes = ligneCommandeService.getLigneCommandesByProduit(Id);
+        	for( LigneCommandeDto ligneCommande : ligneCommandes ) {
+        		ligneCommandeService.deleteLigneCommande(ligneCommande.getId());
         	}
         	
         	produitService.deleteProduit(Id);
