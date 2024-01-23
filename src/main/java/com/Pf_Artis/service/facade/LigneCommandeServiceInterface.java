@@ -18,5 +18,7 @@ public interface LigneCommandeServiceInterface {
     public void deleteLigneCommande( LigneCommandeKey ligneCommandeKey );
     
     public List<LigneCommandeDto> getAllLigneCommandes();
+
+	List<LigneCommandeDto> getLigneCommandesByProduit(Integer produitId);
 	
 }

@@ -35,15 +35,7 @@ public class LigneCommandeServiceImpl implements LigneCommandeServiceInterface {
 		
 		ligneCommandeKey.setCommandeId( resultSet.getInt( "commande_id" ) );
 		ligneCommandeKey.setProduitId( resultSet.getInt( "produit_id" ) );
-		
-		ProduitServiceInterface produitService = new ProduitServiceImpl(DaoFactory.getInstance());
-		ProduitDto produitDto = produitService.readProduit( resultSet.getInt( "produit_id" ) );
-		
-		CommandeServiceInterface commandeService = new CommandeServiceImpl( DaoFactory.getInstance() );
-		CommandeDto commandeDto = commandeService.readCommande( resultSet.getInt( "commande_id" ) );
-		
-		ligneCommandeDto.setCommande(commandeDto);
-		ligneCommandeDto.setProduit(produitDto);
+	
 		ligneCommandeDto.setId(ligneCommandeKey);
 		ligneCommandeDto.setPrixUnitaire( resultSet.getDouble( "prixUnitaire" ) );
 		ligneCommandeDto.setQuantite( resultSet.getDouble( "quantite" ) );
@@ -167,18 +159,14 @@ public class LigneCommandeServiceImpl implements LigneCommandeServiceInterface {
 
 		final String SQL_SELECT_ALL = " SELECT commande_id , produit_id , prixUnitaire , quantite FROM line_commande";
 		
-		Connection connexion = null;
-		PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
-		
 	    LigneCommandeDto ligneCommandeDto = new LigneCommandeDto();
 	    List<LigneCommandeDto> ligneCommandes = new ArrayList<LigneCommandeDto>();
 	    
-	    try {
-	    	connexion = daoFactory.getConnection();
-	        preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_SELECT_ALL);
-	        resultSet = preparedStatement.executeQuery();
-	        
+	    try (
+	    		Connection connexion = daoFactory.getConnection();
+	    		PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_SELECT_ALL);
+	    	    ResultSet resultSet = preparedStatement.executeQuery();
+	    	){
 	        while ( resultSet.next() ) {
 	        	ligneCommandeDto = map( resultSet );
 	        	ligneCommandes.add(ligneCommandeDto);
@@ -191,4 +179,30 @@ public class LigneCommandeServiceImpl implements LigneCommandeServiceInterface {
 		return ligneCommandes;
 	}
 
+	@Override
+	public List<LigneCommandeDto> getLigneCommandesByProduit( Integer produitId ){
+		
+		final String SQL_SELECT_PAR_PRODUIT_ID = "SELECT commande_id , produit_id , prixUnitaire , quantite FROM line_commande  WHERE produit_id = ? ";
+		
+		
+		LigneCommandeDto ligneCommandeDto = new LigneCommandeDto();
+	    List<LigneCommandeDto> ligneCommandes = new ArrayList<LigneCommandeDto>();
+	    try (
+	    		Connection connexion = daoFactory.getConnection();
+	    		PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_SELECT_PAR_PRODUIT_ID , produitId);
+	    	    ResultSet resultSet = preparedStatement.executeQuery();
+	    	){
+	        while ( resultSet.next() ) {
+	        	ligneCommandeDto = map( resultSet );
+	        	ligneCommandes.add(ligneCommandeDto);
+	        }
+		} catch (SQLException e) {
+			
+			throw new DaoException( e );
+			
+		}
+		return ligneCommandes;
+		
+	}
+	
 }
