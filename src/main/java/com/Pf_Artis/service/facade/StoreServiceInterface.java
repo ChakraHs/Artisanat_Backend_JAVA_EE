@@ -2,15 +2,22 @@ package com.Pf_Artis.service.facade;
 
 import java.util.List;
 
-import com.Pf_Artis.models.Store;
+import javax.ws.rs.NotFoundException;
+
+import com.Pf_Artis.dto.StoreDto;
 
 public interface StoreServiceInterface {
 
-	public Store createStore(Store store);
-    public Store readStore(Long id);
-    public Store updateStore(Store store);
-    public void deleteStore(Long id);
+	public StoreDto createStore(StoreDto storeDto) throws NotFoundException;
+	
+    public StoreDto readStore(Integer id);
     
-    public List<Store> getAllStores();
+    public StoreDto updateStore(StoreDto storeDto) throws NotFoundException;
+    
+    public void deleteStore(Integer id);
+    
+    public List<StoreDto> getAllStores();
+
+    StoreDto getLastStores();
 	
 }

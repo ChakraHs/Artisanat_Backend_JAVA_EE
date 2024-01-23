@@ -2,15 +2,23 @@ package com.Pf_Artis.service.facade;
 
 import java.util.List;
 
-import com.Pf_Artis.models.Image;
+import javax.ws.rs.NotFoundException;
+
+import com.Pf_Artis.dto.ImageDto;
 
 public interface ImageServiceInterface {
 
-	public Image createImage(Image image);
-    public Image readImage(Long id);
-    public Image updateImage(Image image);
-    public void deleteImage(Long id);
-    
-    public List<Image> getAllImages();
+	public ImageDto createImage(ImageDto imageDto)throws NotFoundException;
 	
+    public ImageDto readImage(Integer id);
+    
+    public ImageDto updateImage(ImageDto imageDto)throws NotFoundException;
+    
+    public void deleteImage(Integer id);
+    
+    public List<ImageDto> getAllImages();
+	
+    public List<ImageDto> getImagesByProduit( Integer produitId );
+
+	ImageDto getLastImages();
 }

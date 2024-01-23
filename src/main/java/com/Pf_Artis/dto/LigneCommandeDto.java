@@ -1,5 +1,7 @@
 package com.Pf_Artis.dto;
 
+import com.Pf_Artis.models.LigneCommandeKey;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,9 +14,11 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 public class LigneCommandeDto {
 	
-	Long commande_id;
+	LigneCommandeKey id;
 	
-	Long produit_id;
+	CommandeDto commande;
+	
+	ProduitDto produit;
 	
 	double quantite;
 	

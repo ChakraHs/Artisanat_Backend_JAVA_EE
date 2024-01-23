@@ -41,8 +41,8 @@ public class Produit implements Serializable{
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(nullable = false)
-	Long id;
+	@Column(nullable = false,name = "produit_id")
+	Integer produitId;
 	
 	@Column(nullable = false)
 	String nom;

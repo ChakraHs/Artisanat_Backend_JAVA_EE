@@ -16,9 +16,13 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 public class CommandeDto {
 
+	Integer commandeId ;
+	
 	@JsonFormat(shape = JsonFormat.Shape.STRING , pattern = "yyyy-MM-dd HH:mm:ss",timezone = "UTC")
 	Date date_commande;
 	
-	Long client_id;
+	UserDto user;
+	
+	FactureDto facture;
 	
 }

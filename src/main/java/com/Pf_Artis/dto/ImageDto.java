@@ -12,8 +12,10 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 public class ImageDto {
 
+	Integer imageId;
+	
 	String path;
 	
-	Long produit_id;
+	ProduitDto produit;
 	
 }

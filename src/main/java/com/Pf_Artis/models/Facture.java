@@ -35,8 +35,8 @@ public class Facture implements Serializable{
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(nullable = false)
-	Long id ;
+	@Column(nullable = false,name = "facture_id")
+	Integer factureId ;
 	
 	@JsonFormat(shape = JsonFormat.Shape.STRING , pattern = "yyyy-MM-dd",timezone = "UTC")
 	@Column( nullable = false , name = "date_facturation" )
@@ -46,6 +46,6 @@ public class Facture implements Serializable{
 	Long MontantTotal;
 	
 	@OneToOne
-	@JoinColumn(name = "commande_id", referencedColumnName = "id")
+	@JoinColumn(name = "commande_id", referencedColumnName = "commande_id")
 	Commande commande;
 }

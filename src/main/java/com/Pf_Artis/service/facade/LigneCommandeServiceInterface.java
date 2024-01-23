@@ -2,19 +2,21 @@ package com.Pf_Artis.service.facade;
 
 import java.util.List;
 
-import com.Pf_Artis.models.LigneCommande;
+import javax.ws.rs.NotFoundException;
+
+import com.Pf_Artis.dto.LigneCommandeDto;
 import com.Pf_Artis.models.LigneCommandeKey;
 
 public interface LigneCommandeServiceInterface {
 
-	public LigneCommande createLigneCommande( LigneCommande ligneCommande );
+	public LigneCommandeDto createLigneCommande( LigneCommandeDto ligneCommandeDto )throws NotFoundException;
 	
-    public LigneCommande readLigneCommande( LigneCommandeKey ligneCommandeKey );
+    public LigneCommandeDto readLigneCommande( LigneCommandeKey ligneCommandeKey );
     
-    public LigneCommande updateLigneCommande( LigneCommande ligneCommande );
+    public LigneCommandeDto updateLigneCommande( LigneCommandeDto ligneCommandeDto )throws NotFoundException;
     
     public void deleteLigneCommande( LigneCommandeKey ligneCommandeKey );
     
-    public List<LigneCommande> getAllLigneCommandes();
+    public List<LigneCommandeDto> getAllLigneCommandes();
 	
 }

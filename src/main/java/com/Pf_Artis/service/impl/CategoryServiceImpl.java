@@ -7,36 +7,37 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ws.rs.NotFoundException;
+
 import com.Pf_Artis.dao.DaoException;
 import com.Pf_Artis.dao.DaoFactory;
 import com.Pf_Artis.dao.RequestPrepare;
-import com.Pf_Artis.models.Category;
+import com.Pf_Artis.dto.CategoryDto;
+import com.Pf_Artis.exception.EntityNotFoundException;
 import com.Pf_Artis.service.facade.CategoryServiceInterface;
 
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
 public class CategoryServiceImpl implements CategoryServiceInterface {
 
 	private DaoFactory daoFactory;
-	
-	public CategoryServiceImpl(DaoFactory daoFactory) {
-		super();
-		this.daoFactory = daoFactory;
-	}
 
-	private static Category map( ResultSet resultSet ) throws SQLException {
+	private static CategoryDto map( ResultSet resultSet ) throws SQLException {
 		
-		Category category = new Category();
-		category.setId( resultSet.getLong( "id" ) );
-		category.setNom( resultSet.getString( "nom" ) );
-		category.setDescription( resultSet.getString("description") );
+		CategoryDto categoryDto = new CategoryDto();
+		categoryDto.setCategoryId( resultSet.getInt( "category_id" ) );
+		categoryDto.setNom( resultSet.getString( "nom" ) );
+		categoryDto.setDescription( resultSet.getString("description") );
 		
-		return category;
+		return categoryDto;
 	}
 	
 	@Override
-	public Category createCategory(Category category) {
+	public CategoryDto createCategory(CategoryDto categoryDto) {
 		
 		final String SQL_INSERT = "INSERT INTO category ( nom , description ) VALUES (  ? , ? ) ";
-		final String SQL_SELECT_MAX = " SELECT max(id) as max_id from category ";
+		final String SQL_SELECT_MAX = " SELECT max(category_id) as max_id from category ";
 		
 		Connection connexion = null;
 		PreparedStatement preparedStatement = null;
@@ -45,7 +46,7 @@ public class CategoryServiceImpl implements CategoryServiceInterface {
 	    try {
 	    	connexion = daoFactory.getConnection();
 	    	
-	    	preparedStatement = RequestPrepare.initRequestPrepare( connexion , SQL_INSERT , category.getNom() , category.getDescription() );
+	    	preparedStatement = RequestPrepare.initRequestPrepare( connexion , SQL_INSERT , categoryDto.getNom() , categoryDto.getDescription() );
 	        preparedStatement.executeUpdate();
 	        
 	        PreparedStatement ps2 = RequestPrepare.initRequestPrepare( connexion , SQL_SELECT_MAX );
@@ -53,7 +54,7 @@ public class CategoryServiceImpl implements CategoryServiceInterface {
 	        
 	        if(resultSet.next()) {
 				
-				category.setId(resultSet.getLong("max_id"));
+	        	categoryDto.setCategoryId(resultSet.getInt("max_id"));
 				
 			}
 	    	
@@ -61,19 +62,19 @@ public class CategoryServiceImpl implements CategoryServiceInterface {
 			throw new DaoException( e );
 		}
 		
-		return category;
+		return categoryDto;
 	}
 
 	@Override
-	public Category readCategory(Long id) {
+	public CategoryDto readCategory(Integer id) {
 		
-		final String SQL_SELECT_PAR_ID = "SELECT id , description , nom FROM category WHERE id = ? ";
+		final String SQL_SELECT_PAR_ID = "SELECT category_id , description , nom FROM category WHERE category_id = ? ";
 		
 		Connection connexion = null;
 	    PreparedStatement preparedStatement = null;
 	    ResultSet resultSet = null;
 	    
-	    Category category = new Category();
+	    CategoryDto categoryDto = new CategoryDto();
 	    
 	    try {
 			
@@ -83,7 +84,7 @@ public class CategoryServiceImpl implements CategoryServiceInterface {
 	        
 	        if ( resultSet.next() ) {
 	        	
-	        	category = map( resultSet );
+	        	categoryDto = map( resultSet );
 	            
 	        }
 		} catch (SQLException e) {
@@ -91,36 +92,42 @@ public class CategoryServiceImpl implements CategoryServiceInterface {
 			throw new DaoException( e );
 			
 		}
-		return category;
+		return categoryDto;
 	}
 
 	@Override
-	public Category updateCategory(Category category) {
+	public CategoryDto updateCategory(CategoryDto categoryDto) throws NotFoundException {
 		
-		final String SQL_UPDATE = "UPDATE category SET  nom = ? , description = ? where id = ? ";
+		CategoryDto dto = this.readCategory(categoryDto.getCategoryId());
 		
-		Connection connexion = null;
-		PreparedStatement preparedStatement = null;
-		
-		try {
+		if(dto.getCategoryId() != null) {
+			final String SQL_UPDATE = "UPDATE category SET  nom = ? , description = ? where category_id = ? ";
 			
-			connexion = daoFactory.getConnection();
+			Connection connexion = null;
+			PreparedStatement preparedStatement = null;
 			
-	        preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_UPDATE  , category.getNom() , category.getDescription() , category.getId()  );
-	        preparedStatement.executeUpdate();
+			try {
+				
+				connexion = daoFactory.getConnection();
+				
+		        preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_UPDATE  , categoryDto.getNom() , categoryDto.getDescription() , categoryDto.getCategoryId()  );
+		        preparedStatement.executeUpdate();
+				
+			} catch (SQLException e) {
+				
+				throw new DaoException( e );
+				
+			}
 			
-		} catch (SQLException e) {
-			
-			throw new DaoException( e );
-			
+			return categoryDto;
+		}else {
+			throw new EntityNotFoundException("Category Not found");
 		}
-		
-		return category;
 	}
 
 	@Override
-	public void deleteCategory(Long id) {
-		final String SQL_DESTROY = " Delete from category where id=? ";
+	public void deleteCategory(Integer id) {
+		final String SQL_DESTROY = " Delete from category where category_id=? ";
 		
 		Connection connexion = null;
 		PreparedStatement preparedStatement = null;
@@ -139,15 +146,15 @@ public class CategoryServiceImpl implements CategoryServiceInterface {
 	}
 
 	@Override
-	public List<Category> getAllCategories() {
-		final String SQL_SELECT_ALL = " SELECT id , description , nom FROM category ";
+	public List<CategoryDto> getAllCategories() {
+		final String SQL_SELECT_ALL = " SELECT category_id , description , nom FROM category ";
 		
 		Connection connexion = null;
 		PreparedStatement preparedStatement = null;
 	    ResultSet resultSet = null;
 	    
-	    Category category = new Category();
-	    List<Category> categories = new ArrayList<Category>();
+	    CategoryDto categoryDto = new CategoryDto();
+	    List<CategoryDto> categories = new ArrayList<CategoryDto>();
 	    
 	    try {
 	    	connexion = daoFactory.getConnection();
@@ -155,8 +162,8 @@ public class CategoryServiceImpl implements CategoryServiceInterface {
 	        resultSet = preparedStatement.executeQuery();
 	        
 	        while ( resultSet.next() ) {
-	            category = map( resultSet );
-	            categories.add(category);
+	        	categoryDto = map( resultSet );
+	            categories.add(categoryDto);
 	        }
 		} catch (SQLException e) {
 			

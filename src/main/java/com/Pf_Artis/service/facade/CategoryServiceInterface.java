@@ -2,15 +2,20 @@ package com.Pf_Artis.service.facade;
 
 import java.util.List;
 
-import com.Pf_Artis.models.Category;
+import javax.ws.rs.NotFoundException;
+
+import com.Pf_Artis.dto.CategoryDto;
 
 public interface CategoryServiceInterface {
 
-	public Category createCategory( Category category );
-    public Category readCategory( Long id );
-    public Category updateCategory( Category category );
-    public void deleteCategory( Long id );
+	public CategoryDto createCategory( CategoryDto categoryDto );
+	
+    public CategoryDto readCategory( Integer id );
     
-    public List<Category> getAllCategories();
+    public CategoryDto updateCategory( CategoryDto categoryDto )throws NotFoundException;
+    
+    public void deleteCategory( Integer id );
+    
+    public List<CategoryDto> getAllCategories();
 	
 }

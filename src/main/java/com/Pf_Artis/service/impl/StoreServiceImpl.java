@@ -7,99 +7,103 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ws.rs.NotFoundException;
+
 import com.Pf_Artis.dao.DaoException;
 import com.Pf_Artis.dao.DaoFactory;
 import com.Pf_Artis.dao.RequestPrepare;
-import com.Pf_Artis.models.Store;
-import com.Pf_Artis.models.User;
+import com.Pf_Artis.dto.StoreDto;
+import com.Pf_Artis.dto.UserDto;
+import com.Pf_Artis.exception.EntityNotFoundException;
 import com.Pf_Artis.service.facade.StoreServiceInterface;
 import com.Pf_Artis.service.facade.UserServiceInterface;
 
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
 public class StoreServiceImpl implements StoreServiceInterface {
 	
 	DaoFactory daoFactory ;
-	
-	public StoreServiceImpl( DaoFactory daoFactory ) {
 
-		super();
-		this.daoFactory = daoFactory;
+	private static StoreDto map( ResultSet resultSet ) throws SQLException {
 		
-	}
-
-	private static Store map( ResultSet resultSet ) throws SQLException {
-		Store store = new Store();
-		store.setId( resultSet.getLong( "id" ) );
-		store.setNom( resultSet.getString( "nom" ) );
-		store.setAdress( resultSet.getString("adress"));
-		store.setTelephone( resultSet.getString("telephone") );
-		store.setProfile( resultSet.getString("profile") );
+		StoreDto storeDto = new StoreDto();
+		
+		storeDto.setStoreId( resultSet.getInt( "store_id" ) );
+		storeDto.setNom( resultSet.getString( "nom" ) );
+		storeDto.setAdress( resultSet.getString("adress"));
+		storeDto.setTelephone( resultSet.getString("telephone") );
+		storeDto.setProfile( resultSet.getString("profile") );
 		
 		UserServiceInterface userService = new UserServiceImpl(DaoFactory.getInstance());
-		User user = userService.readUser( resultSet.getLong("artisant_id") );
+		UserDto userDto = userService.readUser( resultSet.getInt("artisant_id") );
 		
-		store.setArtisant(user);
+		storeDto.setArtisant(userDto);
 		
-		return store;
+		return storeDto;
 	}
 	
 	
 	@Override
-	public Store createStore(Store store) {
-		
+	public StoreDto createStore(StoreDto storeDto) throws NotFoundException{
+
 		final String SQL_INSERT = "INSERT INTO store ( adress , nom , telephone , artisant_id , profile ) VALUES (  ? , ? , ? , ? , ? ) ";
-		final String SQL_SELECT_MAX = " SELECT max(id) as max_id from store ";
 		
-		Connection connexion = null;
-		PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
-	    if(store.getArtisant().getRole().equals("artisan")) {
-	    	try {
-				
-		    	connexion = daoFactory.getConnection();
-		    	
-		    	preparedStatement = RequestPrepare.initRequestPrepare( connexion , SQL_INSERT , store.getAdress() , store.getNom() , store.getTelephone() , store.getArtisant().getId() , store.getProfile() );
-		    	preparedStatement.executeUpdate();
-		    	
-		    	PreparedStatement ps2 = RequestPrepare.initRequestPrepare( connexion , SQL_SELECT_MAX );
-		        resultSet = ps2.executeQuery();
-		    	
-		        if(resultSet.next()) {
-					
-					store.setId(resultSet.getLong("max_id"));
-					
+		UserServiceInterface userService = new UserServiceImpl(DaoFactory.getInstance());
+		UserDto artisan = userService.readUser( storeDto.getArtisant().getUserId() );
+		
+		if( artisan.getUserId() != null ) {
+			if(storeDto.getArtisant().getRole().getName().equals("ROLE_ARTISAN")) {
+				try (
+				        Connection connexion = daoFactory.getConnection();
+				        PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare(
+				                connexion,
+				                SQL_INSERT,
+				                storeDto.getAdress(),
+				                storeDto.getNom(),
+				                storeDto.getTelephone(),
+				                storeDto.getArtisant().getUserId(),
+				                storeDto.getProfile()
+				        );
+				    ) {
+					preparedStatement.executeUpdate();
+			        
+			        
+				} catch (SQLException e) {
+					throw new DaoException( e );
 				}
-		        
-			} catch (SQLException e) {
-				throw new DaoException( e );
-			}
-			
-			return store;
-	    }
-	    else {
-	    	return null;
-	    }
+				
+				return getLastStores();
+		    }
+		    else {
+		    	throw new EntityNotFoundException("The user role should be ROLE_ARTISAN");
+		    }
+		}else {
+			throw new EntityNotFoundException("User Not found");
+		}
 	    
 	}
 
 	@Override
-	public Store readStore(Long id) {
+	public StoreDto readStore(Integer id) {
 		
-		final String SQL_SELECT_PAR_ID = "SELECT id , adress , nom , telephone , artisant_id , profile FROM store WHERE id = ?";
-		Connection connexion = null;
-	    PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
+		final String SQL_SELECT_PAR_ID = "SELECT store_id , adress , nom , telephone , artisant_id , profile FROM store WHERE store_id = ?";
 	    
-	    Store store = new Store();
+	    StoreDto storeDto = new StoreDto();
 	    
-	    try {
-			
-	    	connexion = daoFactory.getConnection();
-	        preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_SELECT_PAR_ID, id );
-	        resultSet = preparedStatement.executeQuery();
-	        
+	    try (
+    		Connection connexion = daoFactory.getConnection();
+    		PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( 
+	        		connexion, 
+	        		SQL_SELECT_PAR_ID, 
+	        		id 
+	        	);
+    		ResultSet resultSet = preparedStatement.executeQuery()
+	    	)
+	    {
 	        if ( resultSet.next() ) {
 	        	
-	        	store = map( resultSet );
+	        	storeDto = map( resultSet );
 	            
 	        }
 	        
@@ -109,46 +113,56 @@ public class StoreServiceImpl implements StoreServiceInterface {
 			
 		}
 	    
-		return store;
+		return storeDto;
 	}
 
 	@Override
-	public Store updateStore(Store store) {
+	public StoreDto updateStore(StoreDto storeDto) throws NotFoundException {
 		
-		final String SQL_UPDATE = "UPDATE store SET adress = ? , nom = ? , telephone = ? , profile = ? where id = ? ";
+		final String SQL_UPDATE = "UPDATE store SET adress = ? , nom = ? , telephone = ? , profile = ? where store_id = ? ";
 		
-		Connection connexion = null;
-		PreparedStatement preparedStatement = null;
-		
-		try {
+		if( this.readStore( storeDto.getStoreId() ) != null) {
 			
-			connexion = daoFactory.getConnection();
+			try (
+					Connection connexion = daoFactory.getConnection();
+					PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare(
+						connexion , 
+						SQL_UPDATE, 
+						storeDto.getAdress() , 
+						storeDto.getNom() , 
+						storeDto.getTelephone() , 
+						storeDto.getProfile() , 
+						storeDto.getStoreId() 
+					);
+				)
+			{
+				preparedStatement.executeUpdate();
+				
+			} catch (SQLException e) {
+				
+				throw new DaoException( e );
+				
+			}
 			
-			preparedStatement = RequestPrepare.initRequestPrepare(connexion, SQL_UPDATE, store.getAdress(),store.getNom(),store.getTelephone() , store.getProfile() , store.getId());
-			preparedStatement.executeUpdate();
-			
-			
-			
-		} catch (SQLException e) {
-			
-			throw new DaoException( e );
-			
+			return storeDto;
+		}else {
+			throw new EntityNotFoundException("Store Not found");
 		}
-		
-		return store;
 	}
 
 	@Override
-	public void deleteStore(Long id) {
-		final String SQL_DESTROY = " Delete from store where id=? ";
+	public void deleteStore(Integer id) {
+		final String SQL_DESTROY = " Delete from store where store_id = ? ";
 		
-		Connection connexion = null;
-		PreparedStatement preparedStatement = null;
-		
-		try {
-			
-			connexion = daoFactory.getConnection();
-	        preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_DESTROY , id );
+		try(
+				Connection connexion = daoFactory.getConnection();
+				PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( 
+	        		connexion, 
+	        		SQL_DESTROY , 
+	        		id 
+	        	);
+			) 
+		{
 	        preparedStatement.execute();
 			
 		} catch (SQLException e) {
@@ -159,25 +173,25 @@ public class StoreServiceImpl implements StoreServiceInterface {
 	}
 
 	@Override
-	public List<Store> getAllStores() {
-		final String SQL_SELECT_ALL = "SELECT id , adress , nom , telephone , artisant_id , profile FROM store";
-		
-		Connection connexion = null;
-		PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
+	public List<StoreDto> getAllStores() {
+		final String SQL_SELECT_ALL = "SELECT store_id , adress , nom , telephone , artisant_id , profile FROM store";
 	    
-	    Store store = new Store();
-	    List<Store> stores = new ArrayList<Store>();
+	    StoreDto storeDto = new StoreDto();
+	    List<StoreDto> stores = new ArrayList<StoreDto>();
 	    
-	    try {
-			
-	    	connexion = daoFactory.getConnection();
-	    	preparedStatement = RequestPrepare.initRequestPrepare(connexion, SQL_SELECT_ALL );
-	    	resultSet = preparedStatement.executeQuery();
+	    try (
+	    		Connection connexion = daoFactory.getConnection();
+	    		PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare(
+	    			connexion, 
+	    			SQL_SELECT_ALL 
+	    		);
+	    	    ResultSet resultSet = preparedStatement.executeQuery();
+	    	)
+	    {
 	    	
 	    	while ( resultSet.next() ) {
-	            store = map( resultSet );
-	            stores.add(store);
+	            storeDto = map( resultSet );
+	            stores.add(storeDto);
 	        }
 	    	
 		} catch (SQLException e) {
@@ -187,6 +201,36 @@ public class StoreServiceImpl implements StoreServiceInterface {
 		}
 		
 		return stores;
+	}
+	
+	@Override
+	public StoreDto getLastStores() {
+		
+		final String SQL_SELECT_MAX = " SELECT max(store_id) as max_id from store ";
+		System.out.println(" -5-1- test ");
+	    
+	    Integer storeId = null ;
+	    System.out.println(" -5-2- test ");
+	    try (
+	    		Connection connexion = daoFactory.getConnection();
+	    	    PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( connexion, SQL_SELECT_MAX );
+	    	    ResultSet resultSet = preparedStatement.executeQuery();
+	    	)
+	    
+	    {
+	    	System.out.println(" -5-3- test ");
+	        
+	        if ( resultSet.next() ) {
+	        	System.out.println(" -5-4- test ");
+	        	storeId = resultSet.getInt("max_id");
+	            
+	        }
+		} catch (SQLException e) {
+
+			throw new DaoException( e );
+			
+		}
+	    return readStore(storeId);
 	}
 
 }
