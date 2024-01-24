@@ -23,33 +23,36 @@ import org.mindrot.jbcrypt.BCrypt;
 import com.Pf_Artis.config.GenerateJwtToken;
 import com.Pf_Artis.dao.DaoFactory;
 import com.Pf_Artis.dto.RoleDto;
+import com.Pf_Artis.dto.StoreDto;
 import com.Pf_Artis.dto.UserDto;
 import com.Pf_Artis.service.facade.RoleService;
+import com.Pf_Artis.service.facade.StoreServiceInterface;
 import com.Pf_Artis.service.facade.UserServiceInterface;
 import com.Pf_Artis.service.impl.RoleServiceImpl;
+import com.Pf_Artis.service.impl.StoreServiceImpl;
 import com.Pf_Artis.service.impl.UserServiceImpl;
 import com.Pf_Artis.shared.ErrorMessage;
 import com.Pf_Artis.shared.UtilsUploadImage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Servlet implementation class RegisterController
+ * Servlet implementation class RegisterArtisan
  */
-@WebServlet(name="RegisterController",urlPatterns = {"/api/register"} )
+@WebServlet(name="RegisterArtisanController",urlPatterns = {"/api/register/artisan"} )
 @MultipartConfig
-public class RegisterController extends HttpServlet {
-	
+public class RegisterArtisanController extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static final String SAVE_DIRECTORY = "assets\\images\\profiles";
 	private UserServiceInterface userService ;
 	private RoleService roleService;
+	private StoreServiceInterface storeService;
 	private ObjectMapper objectMapper = new ObjectMapper();
 	private UtilsUploadImage uploadImage = new UtilsUploadImage(SAVE_DIRECTORY);
        
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public RegisterController() {
+    public RegisterArtisanController() {
         super();
         // TODO Auto-generated constructor stub
     }
@@ -60,6 +63,7 @@ public class RegisterController extends HttpServlet {
     	DaoFactory daoFactory = DaoFactory.getInstance();
     	userService = new UserServiceImpl(daoFactory);
     	roleService = new RoleServiceImpl(daoFactory);
+    	storeService = new StoreServiceImpl(daoFactory);
     	
     }
     
@@ -82,15 +86,14 @@ public class RegisterController extends HttpServlet {
 	    String roleStr = request.getParameter("role");
 	    RoleDto roleDto  = roleService.findByName(roleStr);
 	    if(roleDto.getRoleId()!=null) {
-	    
+	    	
 	    	String email = request.getParameter("email");
 	    	UserDto dto = userService.getUserByEmail(email);
 	    	if(dto.getUserId() == null) {
 
-		        String nom = request.getParameter("nom");
+		    	String nom = request.getParameter("nom");
 		        String prenom = request.getParameter("prenom");
 		        String telephone = request.getParameter("telephone");
-		        
 		        String password = request.getParameter("password");
 		        String rue = request.getParameter("rue");
 		        String ville = request.getParameter("ville");
@@ -98,6 +101,12 @@ public class RegisterController extends HttpServlet {
 		        
 			    UserDto userDto = new UserDto(null, nom, prenom, ville, rue, numero, telephone, null, email, password, null, null);
 		        
+			    String nomStore = request.getParameter("nomStore");
+			    String avatar = request.getParameter("avatar");
+			    String address = request.getParameter("address");
+			    
+			    StoreDto storeDto = new StoreDto(null, nomStore, address, avatar, userDto);
+			    
 		        String hashedPassword = BCrypt.hashpw(userDto.getPassword(), BCrypt.gensalt());
 		        
 		        userDto.setPassword(hashedPassword);
@@ -157,11 +166,15 @@ public class RegisterController extends HttpServlet {
 		                
 			        }
 		        }
-				
-	        	UserDto saved = userService.createUser(userDto);
+		        
+		        UserDto saved = userService.createUser(userDto);
 	        	
 	        	saved.setPassword(null);
 	            request.getSession().setAttribute("user", saved);
+	            
+	            storeDto.setArtisant(saved);
+	            storeService.createStore(storeDto);
+		        
 	            try {
 	            	
 	            	String json = objectMapper.writeValueAsString(saved);
@@ -187,7 +200,7 @@ public class RegisterController extends HttpServlet {
 		        response.getWriter().write(json);
 	            
 	    	}
-        }else {
+	    }else {
 
 			ErrorMessage message = new ErrorMessage("cette role n'existe pas.", new Date(), 400);
 
@@ -198,7 +211,8 @@ public class RegisterController extends HttpServlet {
 	        
 	        response.getWriter().write(json);
             
-        }	
+	    }
+		
 	}
 
 }

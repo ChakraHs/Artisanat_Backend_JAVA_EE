@@ -32,8 +32,7 @@ public class StoreServiceImpl implements StoreServiceInterface {
 		storeDto.setStoreId( resultSet.getInt( "store_id" ) );
 		storeDto.setNom( resultSet.getString( "nom" ) );
 		storeDto.setAdress( resultSet.getString("adress"));
-		storeDto.setTelephone( resultSet.getString("telephone") );
-		storeDto.setProfile( resultSet.getString("profile") );
+		storeDto.setAvatar( resultSet.getString("avatar") );
 		
 		UserServiceInterface userService = new UserServiceImpl(DaoFactory.getInstance());
 		UserDto userDto = userService.readUser( resultSet.getInt("artisant_id") );
@@ -47,7 +46,7 @@ public class StoreServiceImpl implements StoreServiceInterface {
 	@Override
 	public StoreDto createStore(StoreDto storeDto) throws NotFoundException{
 
-		final String SQL_INSERT = "INSERT INTO store ( adress , nom , telephone , artisant_id , profile ) VALUES (  ? , ? , ? , ? , ? ) ";
+		final String SQL_INSERT = "INSERT INTO store ( adress , nom , artisant_id , avatar ) VALUES (  ? , ? , ? , ? ) ";
 		
 		UserServiceInterface userService = new UserServiceImpl(DaoFactory.getInstance());
 		UserDto artisan = userService.readUser( storeDto.getArtisant().getUserId() );
@@ -61,9 +60,8 @@ public class StoreServiceImpl implements StoreServiceInterface {
 				                SQL_INSERT,
 				                storeDto.getAdress(),
 				                storeDto.getNom(),
-				                storeDto.getTelephone(),
 				                storeDto.getArtisant().getUserId(),
-				                storeDto.getProfile()
+				                storeDto.getAvatar()
 				        );
 				    ) {
 					preparedStatement.executeUpdate();
@@ -87,7 +85,7 @@ public class StoreServiceImpl implements StoreServiceInterface {
 	@Override
 	public StoreDto readStore(Integer id) {
 		
-		final String SQL_SELECT_PAR_ID = "SELECT store_id , adress , nom , telephone , artisant_id , profile FROM store WHERE store_id = ?";
+		final String SQL_SELECT_PAR_ID = "SELECT store_id , adress , nom , artisant_id , avatar FROM store WHERE store_id = ?";
 	    
 	    StoreDto storeDto = new StoreDto();
 	    
@@ -119,7 +117,7 @@ public class StoreServiceImpl implements StoreServiceInterface {
 	@Override
 	public StoreDto updateStore(StoreDto storeDto) throws NotFoundException {
 		
-		final String SQL_UPDATE = "UPDATE store SET adress = ? , nom = ? , telephone = ? , profile = ? where store_id = ? ";
+		final String SQL_UPDATE = "UPDATE store SET adress = ? , nom = ? , avatar = ? where store_id = ? ";
 		
 		if( this.readStore( storeDto.getStoreId() ) != null) {
 			
@@ -130,8 +128,7 @@ public class StoreServiceImpl implements StoreServiceInterface {
 						SQL_UPDATE, 
 						storeDto.getAdress() , 
 						storeDto.getNom() , 
-						storeDto.getTelephone() , 
-						storeDto.getProfile() , 
+						storeDto.getAvatar() , 
 						storeDto.getStoreId() 
 					);
 				)
@@ -174,7 +171,7 @@ public class StoreServiceImpl implements StoreServiceInterface {
 
 	@Override
 	public List<StoreDto> getAllStores() {
-		final String SQL_SELECT_ALL = "SELECT store_id , adress , nom , telephone , artisant_id , profile FROM store";
+		final String SQL_SELECT_ALL = "SELECT store_id , adress , nom , artisant_id , avatar FROM store";
 	    
 	    StoreDto storeDto = new StoreDto();
 	    List<StoreDto> stores = new ArrayList<StoreDto>();
