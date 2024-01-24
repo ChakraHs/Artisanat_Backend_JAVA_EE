@@ -17,20 +17,24 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import com.Pf_Artis.dao.DaoFactory;
+import com.Pf_Artis.dto.CategoryDto;
 import com.Pf_Artis.dto.ImageDto;
 import com.Pf_Artis.dto.LigneCommandeDto;
 import com.Pf_Artis.dto.ProduitDto;
 import com.Pf_Artis.dto.StoreDto;
+import com.Pf_Artis.service.facade.CategoryServiceInterface;
 import com.Pf_Artis.service.facade.ImageServiceInterface;
 import com.Pf_Artis.service.facade.LigneCommandeServiceInterface;
 import com.Pf_Artis.service.facade.ProduitServiceInterface;
 import com.Pf_Artis.service.facade.StoreServiceInterface;
+import com.Pf_Artis.service.impl.CategoryServiceImpl;
 import com.Pf_Artis.service.impl.ImageServiceImpl;
 import com.Pf_Artis.service.impl.LigneCommandeServiceImpl;
 import com.Pf_Artis.service.impl.ProduitServiceImpl;
@@ -51,6 +55,7 @@ public class ProduitController extends HttpServlet {
 	private StoreServiceInterface storeService;
 	private ImageServiceInterface imageService;
 	private LigneCommandeServiceInterface ligneCommandeService ;
+	private CategoryServiceInterface categoryService;
 	private ObjectMapper objectMapper = new ObjectMapper();
 	
     /**
@@ -69,6 +74,7 @@ public class ProduitController extends HttpServlet {
     	storeService = new StoreServiceImpl(daoFactory);
     	imageService = new ImageServiceImpl(daoFactory);
     	ligneCommandeService = new LigneCommandeServiceImpl(daoFactory);
+    	categoryService = new CategoryServiceImpl(daoFactory);
     	
     }
 
@@ -165,10 +171,29 @@ public class ProduitController extends HttpServlet {
 	    request.setCharacterEncoding("UTF-8");
 	    Integer storeId = Integer.parseInt(request.getParameter("storeId"));
 	    StoreDto storeDto = storeService.readStore(storeId);
-		
-		if(storeDto.getStoreId() == null ) {
+	    
+	    String categoresId = request.getParameter("categoryId");
+	    boolean categoryExiste = true;
+	    List<CategoryDto> categories = new ArrayList<CategoryDto>();
+	    String[] numbers = categoresId.split(",");
+	    
+	    // Parcourir le tableau pour obtenir chaque nombre
+        for (String number : numbers) {
+        	
+    	    Integer categoryId = Integer.parseInt(number);
+    	    if(!categoryService.categoryExiste(categoryId)) {
+    	    	categoryExiste = false;
+    	    	break;
+    	    }
+    	    
+    	    CategoryDto categoryDto = categoryService.readCategory(categoryId);
+    	    categories.add(categoryDto);
+    	    
+        }
+		System.out.println(categories);
+		if( storeDto.getStoreId() == null || !categoryExiste ) {
 
-			ErrorMessage message = new ErrorMessage("cette store n'existe pas", new Date(), 400);
+			ErrorMessage message = new ErrorMessage("cette store ou category n'existe pas", new Date(), 400);
 
 			String json = this.objectMapper.writeValueAsString(message);
 			
@@ -213,6 +238,7 @@ public class ProduitController extends HttpServlet {
 	        ProduitDto produitDto = new ProduitDto(null, nom, description, prix, stock, dateFabrication, datePeremption, poids, null, null, null);
 	        
 	        produitDto.setStore(storeDto);
+	        produitDto.setCategorys(categories);
 			ProduitDto saved = produitService.createProduit(produitDto);
 	        
 	        System.out.println("produitDto :"+produitDto);

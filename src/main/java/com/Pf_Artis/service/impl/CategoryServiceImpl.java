@@ -174,4 +174,10 @@ public class CategoryServiceImpl implements CategoryServiceInterface {
 		return categories;
 	}
 
+	@Override
+	public boolean categoryExiste(Integer id) {
+		
+		return readCategory(id).getCategoryId() != null ;
+	}
+	
 }

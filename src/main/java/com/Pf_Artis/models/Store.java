@@ -43,13 +43,10 @@ public class Store implements Serializable {
 	@Column(nullable = false)
 	String nom;
 	
-	@Column(nullable = false)
 	String adress;
 	
-	@Column(nullable = false)
-	String telephone;
 	
-	String profile;
+	String avatar;
 	
 	@OneToMany(mappedBy = "store" , cascade = CascadeType.ALL,fetch = FetchType.LAZY)
 	List<Produit> produits;

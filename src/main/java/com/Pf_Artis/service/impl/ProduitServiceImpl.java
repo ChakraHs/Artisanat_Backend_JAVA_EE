@@ -12,10 +12,13 @@ import javax.ws.rs.NotFoundException;
 import com.Pf_Artis.dao.DaoException;
 import com.Pf_Artis.dao.DaoFactory;
 import com.Pf_Artis.dao.RequestPrepare;
+import com.Pf_Artis.dto.CategoryDto;
+import com.Pf_Artis.dto.CategoryProduitDto;
 import com.Pf_Artis.dto.ImageDto;
 import com.Pf_Artis.dto.ProduitDto;
 import com.Pf_Artis.dto.StoreDto;
 import com.Pf_Artis.exception.EntityNotFoundException;
+import com.Pf_Artis.service.facade.CategoryProduitService;
 import com.Pf_Artis.service.facade.ImageServiceInterface;
 import com.Pf_Artis.service.facade.ProduitServiceInterface;
 import com.Pf_Artis.service.facade.StoreServiceInterface;
@@ -78,6 +81,20 @@ public class ProduitServiceImpl implements ProduitServiceInterface {
 		    	)
 		    {
 		        preparedStatement.executeUpdate();
+		        
+		        ProduitDto saved = getLastProduits();
+		        
+		        for(CategoryDto categoryDto : produitDto.getCategorys()) {
+		        	
+		        	CategoryProduitDto categoryProduitDto = new CategoryProduitDto();
+		        	categoryProduitDto.setCategory(categoryDto);
+		        	categoryProduitDto.setProduit(saved);
+		        	
+		        	CategoryProduitService categoryProduitService = new CategoryProduitServiceImpl(DaoFactory.getInstance());
+		        	categoryProduitService.save(categoryProduitDto);
+		        	
+		        }
+		        
 			
 		    } catch (SQLException e) {
 				throw new DaoException( e );

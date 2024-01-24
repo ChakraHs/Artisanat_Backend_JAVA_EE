@@ -17,5 +17,7 @@ public interface CategoryServiceInterface {
     public void deleteCategory( Integer id );
     
     public List<CategoryDto> getAllCategories();
+
+	boolean categoryExiste(Integer id);
 	
 }

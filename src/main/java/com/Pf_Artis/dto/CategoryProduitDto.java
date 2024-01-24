@@ -10,17 +10,12 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @NoArgsConstructor
-public class StoreDto {
+public class CategoryProduitDto {
 
-	Integer storeId;
+	CategoryProduitKey id;
 	
-	String nom;
+	ProduitDto produit;
 	
-	String adress;
-	
-	String avatar;
-	
-	UserDto artisant;
-	
+	CategoryDto category;
 	
 }
