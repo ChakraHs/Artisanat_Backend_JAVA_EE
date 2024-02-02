@@ -5,15 +5,20 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import com.Pf_Artis.dao.DaoFactory;
 import com.Pf_Artis.dto.StoreDto;
 import com.Pf_Artis.dto.UserDto;
+import com.Pf_Artis.service.facade.ProduitServiceInterface;
 import com.Pf_Artis.service.facade.StoreServiceInterface;
 import com.Pf_Artis.service.facade.UserServiceInterface;
+import com.Pf_Artis.service.impl.ProduitServiceImpl;
 import com.Pf_Artis.service.impl.StoreServiceImpl;
 import com.Pf_Artis.service.impl.UserServiceImpl;
 import com.Pf_Artis.shared.ErrorMessage;
@@ -28,6 +33,7 @@ public class StoreController extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private StoreServiceInterface storeService ;
 	private UserServiceInterface userService;
+	private ProduitServiceInterface produitService;
 	private ObjectMapper objectMapper = new ObjectMapper();
        
     /**
@@ -44,6 +50,7 @@ public class StoreController extends HttpServlet {
     	DaoFactory daoFactory= DaoFactory.getInstance();
     	storeService = new StoreServiceImpl(daoFactory);
     	userService = new UserServiceImpl(daoFactory);
+    	produitService = new ProduitServiceImpl(daoFactory);
     	
     }
 
@@ -51,6 +58,8 @@ public class StoreController extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		request.setCharacterEncoding("UTF-8");
 		
 		String path=request.getPathInfo();
 		System.out.println(path);
@@ -124,6 +133,57 @@ public class StoreController extends HttpServlet {
 					
 				}
 			}
+		}else if(path.split("/")[1].equals("artisan")) {
+			
+			System.out.println("bien entréeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+			
+			String authorizationHeader = request.getHeader("Authorization");
+			
+			if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+	            // Extraire le jeton d'autorisation (enlever le préfixe "Bearer ")
+	            String token = authorizationHeader.substring(7);
+
+	            // Utiliser le jeton comme nécessaire
+	            System.out.println("Bearer Token: " + token);
+	            
+	            HttpSession session = request.getSession();
+	            Integer userId = (Integer) session.getAttribute("userId");
+	            System.out.println(userId);
+	            
+	            if(userId!=null) {
+					List<StoreDto> list = storeService.findStoreByArtisan(userId);
+					List<StoreDto> stores = new ArrayList<StoreDto>();
+					
+					for( StoreDto storeDto : list) {
+						
+						Integer Qte = produitService.countProduitByStore(storeDto.getStoreId());
+						storeDto.setQteProduit(Qte);
+						stores.add(storeDto);
+						
+					}
+	
+					String json = this.objectMapper.writeValueAsString(stores);
+					
+					response.setContentType("application/json");
+			        response.setCharacterEncoding("UTF-8");
+			        
+			        response.getWriter().write(json);
+					
+				}else {
+					ErrorMessage message = new ErrorMessage("token is not valid.", new Date(), 400);
+	
+					String json = this.objectMapper.writeValueAsString(message);
+					
+					response.setContentType("application/json");
+			        response.setCharacterEncoding("UTF-8");
+			        
+			        response.getWriter().write(json);
+				}
+	        } else {
+	            // Aucun en-tête d'autorisation ou format incorrect
+	            response.getWriter().write("Aucun jeton d'autorisation trouvé");
+	        }
+			
 		}
 		else {
 			
@@ -170,14 +230,52 @@ public class StoreController extends HttpServlet {
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		System.out.println("teeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeest");
+		String authorizationHeader = request.getHeader("Authorization");
+		
+		if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
 			
-		StoreDto storeDto = objectMapper.readValue(request.getReader(), StoreDto.class);
-		
-		UserDto userDto = userService.readUser(storeDto.getArtisant().getUserId());
-		
-		if( userDto.getUserId() == null || userDto.getRole().getName().equals("ROLE_CLIENT")) {
+			System.out.println("teeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeest");
+			StoreDto storeDto = objectMapper.readValue(request.getReader(), StoreDto.class);
+			System.out.println(storeDto);
+			
+			UserDto userDto = userService.readUser(storeDto.getArtisant().getUserId());
+			System.out.println(userDto);
+			
+			if( userDto.getUserId() == null || userDto.getRole().getName().equals("ROLE_CLIENT")) {
 
-			ErrorMessage message = new ErrorMessage("cette artisan n'existe pas.", new Date(), 400);
+				ErrorMessage message = new ErrorMessage("cette artisan n'existe pas.", new Date(), 400);
+
+				String json = this.objectMapper.writeValueAsString(message);
+				
+				response.setContentType("application/json");
+		        response.setCharacterEncoding("UTF-8");
+		        
+		        response.getWriter().write(json);
+	            
+			}else {
+
+				storeDto.setArtisant(userDto);
+				
+				StoreDto saved =  storeService.createStore(storeDto);
+				try {
+					
+					String jsonStore = objectMapper.writeValueAsString(saved);
+		            response.setContentType("application/json");
+		            response.setCharacterEncoding("UTF-8");
+		            
+		            response.getWriter().write(jsonStore);
+					
+				} catch (Exception e) {
+
+					e.printStackTrace();
+
+				}
+			}
+		}else {
+
+        	ErrorMessage message = new ErrorMessage("Aucun jeton d'autorisation trouvé.", new Date(), 200);
 
 			String json = this.objectMapper.writeValueAsString(message);
 			
@@ -185,26 +283,9 @@ public class StoreController extends HttpServlet {
 	        response.setCharacterEncoding("UTF-8");
 	        
 	        response.getWriter().write(json);
-            
-		}else {
-
-			storeDto.setArtisant(userDto);
-			
-			StoreDto saved =  storeService.createStore(storeDto);
-			try {
-				
-				String jsonStore = objectMapper.writeValueAsString(saved);
-	            response.setContentType("application/json");
-	            response.setCharacterEncoding("UTF-8");
-	            
-	            response.getWriter().write(jsonStore);
-				
-			} catch (Exception e) {
-
-				e.printStackTrace();
-
-			}
+	        
 		}
+		
 	}
 	
 	@Override

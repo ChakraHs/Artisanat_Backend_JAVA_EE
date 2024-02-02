@@ -144,16 +144,12 @@ public class UserServiceImpl implements UserServiceInterface {
 		
 		if( this.readUser( userDto.getUserId() ) != null ) {
 
-			final String SQL_UPDATE = "UPDATE user SET numero = ? , rue = ? , ville = ? , email = ? , nom = ? , prenom = ? , telephone = ? , profile = ? where user_id = ? ";
+			final String SQL_UPDATE = "UPDATE user SET numero = ? , rue = ? , ville = ? , email = ? , nom = ? , prenom = ? , telephone = ? , profile = ? ,token = ? where user_id = ? ";
 			
-			Connection connexion = null;
-			PreparedStatement preparedStatement = null;
 			
-			try {
-				
-				connexion = daoFactory.getConnection();
-				
-		        preparedStatement = RequestPrepare.initRequestPrepare( 
+			try (
+					Connection connexion = daoFactory.getConnection();
+					PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( 
 		        		connexion, 
 		        		SQL_UPDATE  , 
 		        		userDto.getNumero() , 
@@ -164,8 +160,12 @@ public class UserServiceImpl implements UserServiceInterface {
 		        		userDto.getPrenom() , 
 		        		userDto.getTelephone() , 
 		        		userDto.getProfile() , 
-		        		userDto.getUserId()  );
-		        preparedStatement.executeUpdate();
+		        		userDto.getToken(),
+		        		userDto.getUserId()  
+			        );
+				)
+			{
+				preparedStatement.executeUpdate();
 				
 			} catch (SQLException e) {
 				

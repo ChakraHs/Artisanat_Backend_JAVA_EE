@@ -230,4 +230,36 @@ public class StoreServiceImpl implements StoreServiceInterface {
 	    return readStore(storeId);
 	}
 
+	@Override
+	public List<StoreDto> findStoreByArtisan(Integer id){
+		
+		final String SQL_SELECT_BY_ARTISAN = "SELECT store_id , adress , nom , artisant_id , avatar FROM store where artisant_id = ?";
+	    
+	    StoreDto storeDto = new StoreDto();
+	    List<StoreDto> stores = new ArrayList<StoreDto>();
+		
+	    try (
+	    		Connection connexion = daoFactory.getConnection();
+	    		PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare(
+	    			connexion, 
+	    			SQL_SELECT_BY_ARTISAN,
+	    			id
+	    		);
+	    	    ResultSet resultSet = preparedStatement.executeQuery();
+	    	)
+	    {
+	    	
+	    	while ( resultSet.next() ) {
+	            storeDto = map( resultSet );
+	            stores.add(storeDto);
+	        }
+	    	
+		} catch (SQLException e) {
+			
+			throw new DaoException( e );
+			
+		}
+		
+		return stores;
+	}
 }

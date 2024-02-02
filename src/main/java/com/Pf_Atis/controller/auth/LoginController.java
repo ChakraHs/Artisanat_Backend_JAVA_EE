@@ -5,6 +5,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 
@@ -12,6 +14,7 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import com.Pf_Artis.config.GenerateJwtToken;
 import com.Pf_Artis.dao.DaoFactory;
+import com.Pf_Artis.dto.AuthDto;
 import com.Pf_Artis.dto.UserDto;
 import com.Pf_Artis.dto.UserLoginDto;
 import com.Pf_Artis.service.facade.UserServiceInterface;
@@ -41,14 +44,7 @@ public class LoginController extends HttpServlet {
     	userService = new UserServiceImpl(daoFactory);
     	
     }
-    
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-	}
+
 
 	/**
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
@@ -81,12 +77,16 @@ public class LoginController extends HttpServlet {
         	user.setToken(jwt);
         	userService.updateUser(user);
         	
-        	request.getSession().setAttribute("user", user);
-        	user.setPassword(null);
+        	AuthDto authDto = new AuthDto( user.getUserId() , jwt , user.getRole().getName() , "Success" );
+        	
+        	HttpSession session = request.getSession();
+        	session.setAttribute("userId", user.getUserId());
+        	
+        	System.out.println(session.getAttribute("userId"));
         	
         	try {
     			
-    			String json = objectMapper.writeValueAsString(user);
+    			String json = objectMapper.writeValueAsString(authDto);
     			
     			response.setContentType("application/json");
     	        response.setCharacterEncoding("UTF-8");

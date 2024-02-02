@@ -10,19 +10,14 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @NoArgsConstructor
-public class StoreDto {
+public class AuthDto {
 
-	Integer storeId;
+	Integer userId;
 	
-	String nom;
+	String token;
 	
-	String adress;
+	String role;
 	
-	String avatar;
-	
-	Integer qteProduit;
-	
-	UserDto artisant;
-	
+	String message;
 	
 }

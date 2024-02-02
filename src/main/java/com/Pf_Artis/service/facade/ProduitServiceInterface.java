@@ -19,5 +19,9 @@ public interface ProduitServiceInterface {
     public List<ProduitDto> getAllProduits();
     
     public ProduitDto getLastProduits();
+
+	Integer countProduitByStore(Integer storeId);
+
+	List<ProduitDto> findProduitsByStore(Integer storeId);
     
 }
