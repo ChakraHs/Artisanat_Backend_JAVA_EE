@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 
 import java.io.File;
@@ -22,6 +23,7 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import com.Pf_Artis.config.GenerateJwtToken;
 import com.Pf_Artis.dao.DaoFactory;
+import com.Pf_Artis.dto.AuthDto;
 import com.Pf_Artis.dto.RoleDto;
 import com.Pf_Artis.dto.UserDto;
 import com.Pf_Artis.service.facade.RoleService;
@@ -62,14 +64,6 @@ public class RegisterController extends HttpServlet {
     	roleService = new RoleServiceImpl(daoFactory);
     	
     }
-    
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-	}
 
 	/**
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
@@ -161,10 +155,16 @@ public class RegisterController extends HttpServlet {
 	        	UserDto saved = userService.createUser(userDto);
 	        	
 	        	saved.setPassword(null);
-	            request.getSession().setAttribute("user", saved);
+	        	HttpSession session = request.getSession();
+	        	session.setAttribute("userId", saved.getUserId());
+	        	
+	        	System.out.println(session.getAttribute("userId"));
+	            
+	            AuthDto authDto = new AuthDto( saved.getUserId() , jwt , saved.getRole().getName() , "Success" );
+	            
 	            try {
 	            	
-	            	String json = objectMapper.writeValueAsString(saved);
+	            	String json = objectMapper.writeValueAsString(authDto);
 	                response.setContentType("application/json");
 	                response.setCharacterEncoding("UTF-8");
 	                

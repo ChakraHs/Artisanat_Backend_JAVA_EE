@@ -86,7 +86,7 @@ public class LogoutController extends HttpServlet {
 			
 			System.out.println("test-log");
 			
-			MessageLogout logout = new MessageLogout("déjà deconnecter");
+			MessageLogout logout = new MessageLogout("bien deconnecter");
 			
 			String json = objectMapper.writeValueAsString(logout);
 			response.setContentType("application/json");

@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 
 import java.io.File;
@@ -119,8 +120,60 @@ public class ProduitController extends HttpServlet {
 		        response.getWriter().write(json);
 				
 			}
-		}
-		else {
+		}else if(path.split("/")[1].equals("artisan")) {
+			
+			System.out.println("bien entréeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+			
+			String authorizationHeader = request.getHeader("Authorization");
+			
+			if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+	            // Extraire le jeton d'autorisation (enlever le préfixe "Bearer ")
+	            String token = authorizationHeader.substring(7);
+
+	            // Utiliser le jeton comme nécessaire
+	            System.out.println("Bearer Token: " + token);
+	            
+	            HttpSession session = request.getSession();
+	            Integer userId = (Integer) session.getAttribute("userId");
+	            System.out.println(userId);
+	            
+	            if(userId!=null) {
+	            	
+	            	List<ProduitDto> produitDtos = new ArrayList<ProduitDto>();
+	            	List<StoreDto> stores = storeService.findStoreByArtisan(userId);
+	            	System.out.println(stores);
+	            	for(StoreDto storeDto : stores) {
+	            		
+	            		List<ProduitDto> produits = produitService.findProduitsByStore(storeDto.getStoreId());
+	            		System.out.println(produits);
+	            		produitDtos.addAll(produits);
+	            		
+	            	}
+	            	
+					
+
+					String json = this.objectMapper.writeValueAsString(produitDtos);
+					
+					response.setContentType("application/json");
+			        response.setCharacterEncoding("UTF-8");
+			        
+			        response.getWriter().write(json);
+					
+				}else {
+					ErrorMessage message = new ErrorMessage("token is not valid.", new Date(), 400);
+	
+					String json = this.objectMapper.writeValueAsString(message);
+					
+					response.setContentType("application/json");
+			        response.setCharacterEncoding("UTF-8");
+			        
+			        response.getWriter().write(json);
+				}
+	        } else {
+	            // Aucun en-tête d'autorisation ou format incorrect
+	            response.getWriter().write("Aucun jeton d'autorisation trouvé");
+	        }
+		}else {
 			
 			String[] pathParts = path.split("/");
 			

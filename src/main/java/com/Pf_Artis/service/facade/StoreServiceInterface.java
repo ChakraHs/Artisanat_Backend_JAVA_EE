@@ -19,5 +19,7 @@ public interface StoreServiceInterface {
     public List<StoreDto> getAllStores();
 
     StoreDto getLastStores();
+
+	List<StoreDto> findStoreByArtisan(Integer id);
 	
 }

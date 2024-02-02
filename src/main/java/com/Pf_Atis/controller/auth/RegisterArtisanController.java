@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 
 import java.io.File;
@@ -22,6 +23,7 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import com.Pf_Artis.config.GenerateJwtToken;
 import com.Pf_Artis.dao.DaoFactory;
+import com.Pf_Artis.dto.AuthDto;
 import com.Pf_Artis.dto.RoleDto;
 import com.Pf_Artis.dto.StoreDto;
 import com.Pf_Artis.dto.UserDto;
@@ -105,7 +107,7 @@ public class RegisterArtisanController extends HttpServlet {
 			    String avatar = request.getParameter("avatar");
 			    String address = request.getParameter("address");
 			    
-			    StoreDto storeDto = new StoreDto(null, nomStore, address, avatar, userDto);
+			    StoreDto storeDto = new StoreDto(null, nomStore, address, avatar , null , userDto );
 			    
 		        String hashedPassword = BCrypt.hashpw(userDto.getPassword(), BCrypt.gensalt());
 		        
@@ -170,14 +172,19 @@ public class RegisterArtisanController extends HttpServlet {
 		        UserDto saved = userService.createUser(userDto);
 	        	
 	        	saved.setPassword(null);
-	            request.getSession().setAttribute("user", saved);
+	        	HttpSession session = request.getSession();
+	        	session.setAttribute("userId", saved.getUserId());
+	        	
+	        	System.out.println(session.getAttribute("userId"));
 	            
 	            storeDto.setArtisant(saved);
 	            storeService.createStore(storeDto);
+	            
+	            AuthDto authDto = new AuthDto( saved.getUserId() , jwt , saved.getRole().getName() , "Success" );
 		        
 	            try {
 	            	
-	            	String json = objectMapper.writeValueAsString(saved);
+	            	String json = objectMapper.writeValueAsString(authDto);
 	                response.setContentType("application/json");
 	                response.setCharacterEncoding("UTF-8");
 	                

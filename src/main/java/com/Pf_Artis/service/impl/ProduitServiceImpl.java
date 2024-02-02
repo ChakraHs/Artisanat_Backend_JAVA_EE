@@ -257,4 +257,64 @@ public class ProduitServiceImpl implements ProduitServiceInterface {
 	    return readProduit(produitId);
 	}
 
+	@Override
+	public Integer countProduitByStore(Integer storeId) {
+		
+		final String SQL_COUNT_PRODUIT_BY_STORE = "SELECT COUNT( produit_id ) as Qte FROM produit WHERE store_id = ?  GROUP BY store_id ";
+		
+		Integer count=null;
+		try (
+				Connection connexion = daoFactory.getConnection();
+	    	    PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( 
+	    	    	connexion, 
+	    	    	SQL_COUNT_PRODUIT_BY_STORE,
+	    	    	storeId
+	    	    );
+	    	    ResultSet resultSet = preparedStatement.executeQuery();	
+			){
+			if ( resultSet.next() ) {
+	        	
+				count = resultSet.getInt("Qte");
+	            
+	        }
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		
+		return count;
+	}
+
+	@Override
+	public List<ProduitDto> findProduitsByStore(Integer storeId){
+		
+		final String SQL_SELECT_BY_ARTISAN = "SELECT produit_id , date_fabrication , date_peremption , description , nom , poids , prix , stock , store_id FROM produit WHERE store_id = ?";
+	    
+		ProduitDto produitDto = new ProduitDto();
+		List<ProduitDto> produits = new ArrayList<ProduitDto>();
+		
+		try (
+	    		Connection connexion = daoFactory.getConnection();
+	    		PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare(
+	    			connexion, 
+	    			SQL_SELECT_BY_ARTISAN,
+	    			storeId
+	    		);
+	    	    ResultSet resultSet = preparedStatement.executeQuery();
+	    	)
+	    {
+	    	
+	    	while ( resultSet.next() ) {
+	    		produitDto = map( resultSet );
+	    		produits.add(produitDto);
+	        }
+	    	
+		} catch (SQLException e) {
+			
+			throw new DaoException( e );
+			
+		}
+		
+		return produits;
+	}
+	
 }
