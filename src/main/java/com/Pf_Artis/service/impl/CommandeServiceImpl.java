@@ -12,7 +12,9 @@ import javax.ws.rs.NotFoundException;
 import com.Pf_Artis.dao.DaoException;
 import com.Pf_Artis.dao.DaoFactory;
 import com.Pf_Artis.dao.RequestPrepare;
+import com.Pf_Artis.dto.CommandeByArtisanDto;
 import com.Pf_Artis.dto.CommandeDto;
+import com.Pf_Artis.dto.ProduitByDateDto;
 import com.Pf_Artis.dto.UserDto;
 import com.Pf_Artis.exception.EntityNotFoundException;
 import com.Pf_Artis.service.facade.CommandeServiceInterface;
@@ -188,6 +190,89 @@ public class CommandeServiceImpl implements CommandeServiceInterface {
 			throw new DaoException( e );	
 		}
 		return commandes;
+	}
+	
+	@Override
+	public List<ProduitByDateDto> getNbreProduitAchatByArtisan(Integer id){
+		
+		final String SQL_SELECT = " SELECT c.date_commande, SUM(lc.quantite) AS nombre_achats "
+				+ "FROM commande c "
+				+ "JOIN line_commande lc ON c.commande_id = lc.commande_id "
+				+ "JOIN produit p ON lc.produit_id = p.produit_id "
+				+ "JOIN store s ON p.store_id = s.store_id "
+				+ "JOIN user a ON s.artisant_id = a.user_id "
+				+ "WHERE a.user_id = ? "
+				+ "GROUP BY c.date_commande "
+				+ "ORDER BY c.date_commande;";
+		
+		List<ProduitByDateDto> dtos = new ArrayList<ProduitByDateDto>();
+		
+		try (
+				Connection connexion = daoFactory.getConnection();
+				PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( 
+					connexion, 
+					SQL_SELECT,
+					id
+				);
+			    ResultSet resultSet = preparedStatement.executeQuery();
+			){
+			
+			while(resultSet.next()) {
+				
+				ProduitByDateDto dto = new ProduitByDateDto();
+				
+				dto.setDateAchat(resultSet.getDate( "c.date_commande" ));
+				dto.setNbreAchats(resultSet.getInt( "nombre_achats" ));
+				dtos.add(dto);
+				
+			}
+			
+		} catch (SQLException e) {
+			throw new DaoException( e );	
+		}
+		
+		return dtos;
+	}
+	
+	@Override
+	public List<CommandeByArtisanDto> getCommandeByArtisan(Integer artisan_id){
+		
+		final String SQL_SELECT = "SELECT c.commande_id , c.date_commande , p.nom "
+				+ "FROM commande c "
+				+ "JOIN line_commande lc ON c.commande_id = lc.commande_id "
+				+ "JOIN produit p ON lc.produit_id = p.produit_id "
+				+ "JOIN store s ON p.store_id = s.store_id "
+				+ "JOIN user a ON s.artisant_id = a.user_id "
+				+ "WHERE a.user_id = ? ;";
+		
+		List<CommandeByArtisanDto> dtos = new ArrayList<CommandeByArtisanDto>();
+		
+		try (
+				Connection connexion = daoFactory.getConnection();
+				PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( 
+					connexion, 
+					SQL_SELECT,
+					artisan_id
+				);
+			    ResultSet resultSet = preparedStatement.executeQuery();
+			){
+			
+			while(resultSet.next()) {
+				
+				CommandeByArtisanDto dto = new CommandeByArtisanDto();
+				
+				dto.setDate_commande(resultSet.getDate( "c.date_commande" ));
+				dto.setNomProduit(resultSet.getString("p.nom"));
+				dto.setCommandeId(resultSet.getInt("c.commande_id"));
+				
+				dtos.add(dto);
+				
+			}
+		} catch (SQLException e) {
+			throw new DaoException( e );	
+		}
+		
+		return dtos;
 	}
 
 }

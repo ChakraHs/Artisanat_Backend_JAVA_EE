@@ -260,7 +260,7 @@ public class ProduitServiceImpl implements ProduitServiceInterface {
 	@Override
 	public Integer countProduitByStore(Integer storeId) {
 		
-		final String SQL_COUNT_PRODUIT_BY_STORE = "SELECT COUNT( produit_id ) as Qte FROM produit WHERE store_id = ?  GROUP BY store_id ";
+		final String SQL_COUNT_PRODUIT_BY_STORE = "SELECT COUNT( produit_id ) as Qte FROM produit WHERE store_id = ?";
 		
 		Integer count=null;
 		try (

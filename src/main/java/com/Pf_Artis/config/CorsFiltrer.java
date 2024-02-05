@@ -31,8 +31,6 @@ public class CorsFiltrer implements Filter{
         httpResponse.addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         httpResponse.addHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept ,Authorization");
         
-        System.out.println("-do filtre test");
-        
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpSession session = httpRequest.getSession();
         
@@ -41,10 +39,10 @@ public class CorsFiltrer implements Filter{
         String path=httpRequest.getServletPath();
         
         
-        System.out.println("pathhhhhhhhhhhhhhgetServletPath : "+httpRequest.getServletPath());
-        System.out.println("pathhhhhhhhhhhhhhgetContextPath : "+httpRequest.getContextPath());
-        System.out.println("pathhhhhhhhhhhhhhgetPathTranslated : "+httpRequest.getPathTranslated());
-        System.out.println("pathhhhhhhhhhhhhh : "+path);
+//        System.out.println("pathhhhhhhhhhhhhhgetServletPath : "+httpRequest.getServletPath());
+//        System.out.println("pathhhhhhhhhhhhhhgetContextPath : "+httpRequest.getContextPath());
+//        System.out.println("pathhhhhhhhhhhhhhgetPathTranslated : "+httpRequest.getPathTranslated());
+//        System.out.println("pathhhhhhhhhhhhhh : "+path);
         
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String jwtToken = authorizationHeader.substring(7); // Supprime "Bearer " du token
@@ -53,11 +51,10 @@ public class CorsFiltrer implements Filter{
             try {
 				
             	boolean check =  GenerateJwtToken.isValidJwt(jwtToken);
-				System.out.println("check------"+check);
 				if(check) {
 					
 					String email = GenerateJwtToken.extractUsername(jwtToken);
-					System.out.println( email );
+//					System.out.println( email );
 					UserServiceInterface serviceInterface = new UserServiceImpl(DaoFactory.getInstance());
 					UserDto userDto = serviceInterface.getUserByEmail(email);
 					
@@ -68,7 +65,7 @@ public class CorsFiltrer implements Filter{
 						userDto.setToken("");
 						serviceInterface.updateUser(userDto);
 						
-						System.out.println(" /api/logouttttttttttttttttt ");
+//						System.out.println(" /api/logouttttttttttttttttt ");
 					}else {
 						
 						session.setAttribute("userId", userDto.getUserId());
