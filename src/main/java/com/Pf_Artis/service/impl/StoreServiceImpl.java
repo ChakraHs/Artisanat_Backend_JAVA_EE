@@ -262,4 +262,31 @@ public class StoreServiceImpl implements StoreServiceInterface {
 		
 		return stores;
 	}
+	
+	@Override
+	public Integer countStoreByArtisan(Integer id) {
+		
+		final String SQL_COUNT_STORE_BY_ARTISAN = "SELECT COUNT( store_id ) as Qte FROM store WHERE artisant_id = ?";
+		
+		Integer count=null;
+		try (
+				Connection connexion = daoFactory.getConnection();
+	    	    PreparedStatement preparedStatement = RequestPrepare.initRequestPrepare( 
+	    	    	connexion, 
+	    	    	SQL_COUNT_STORE_BY_ARTISAN,
+	    	    	id
+	    	    );
+	    	    ResultSet resultSet = preparedStatement.executeQuery();	
+			){
+			if ( resultSet.next() ) {
+	        	
+				count = resultSet.getInt("Qte");
+	            
+	        }
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		
+		return count;
+	}
 }

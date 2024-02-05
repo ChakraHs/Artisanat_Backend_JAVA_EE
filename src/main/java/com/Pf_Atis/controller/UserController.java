@@ -5,6 +5,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
@@ -54,6 +56,7 @@ public class UserController extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
 		String path=request.getPathInfo();
+		String authorizationHeader = request.getHeader("Authorization");
 		
 		if( path == null || path.split("/")[1].equals("*")) {
 			
@@ -89,8 +92,50 @@ public class UserController extends HttpServlet {
 		        response.getWriter().write(json);
 				
 			}
-		}
-		else {
+		}else if(path.split("/")[1].equals("userData") ) {
+			
+			System.out.println("bien entréeeeeeeeeeeeeeeeeeeeeeeeeeeeeee countby/artisan");
+			
+			if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+	            // Extraire le jeton d'autorisation (enlever le préfixe "Bearer ")
+//		            String token = authorizationHeader.substring(7);
+
+	            // Utiliser le jeton comme nécessaire
+//		            System.out.println("Bearer Token: " + token);
+	            
+	            HttpSession session = request.getSession();
+	            Integer userId = (Integer) session.getAttribute("userId");
+//		            System.out.println(userId);
+	            
+	            if(userId!=null) {
+	            	
+	            	UserDto userDto = userService.readUser(userId);
+	            	userDto.setEmail("");
+	            	userDto.setPassword("");
+	            	String json = this.objectMapper.writeValueAsString( userDto );
+					
+					response.setContentType("application/json");
+			        response.setCharacterEncoding("UTF-8");
+			        
+			        response.getWriter().write(json);
+	            	
+	            	
+	            }else {
+	            	
+	            	ErrorMessage message = new ErrorMessage("token is not valid.", new Date(), 400);
+	            	
+					String json = this.objectMapper.writeValueAsString(message);
+					
+					response.setContentType("application/json");
+			        response.setCharacterEncoding("UTF-8");
+			        
+			        response.getWriter().write(json);
+	            }
+			} else {
+	            // Aucun en-tête d'autorisation ou format incorrect
+	            response.getWriter().write("Aucun jeton d'autorisation trouvé");
+	        }
+		}else {
 			
 			String[] pathParts = path.split("/");
 			

@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.Pf_Artis.dao.DaoFactory;
+import com.Pf_Artis.dto.QteDto;
 import com.Pf_Artis.dto.StoreDto;
 import com.Pf_Artis.dto.UserDto;
 import com.Pf_Artis.service.facade.ProduitServiceInterface;
@@ -60,6 +61,8 @@ public class StoreController extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
 		request.setCharacterEncoding("UTF-8");
+		
+		String authorizationHeader = request.getHeader("Authorization");
 		
 		String path=request.getPathInfo();
 		System.out.println(path);
@@ -133,11 +136,53 @@ public class StoreController extends HttpServlet {
 					
 				}
 			}
+		}else if(path.split("/")[1].equals("countby") && path.split("/")[2].equals("artisan")) {
+			
+			System.out.println("bien entréeeeeeeeeeeeeeeeeeeeeeeeeeeeeee countby/artisan");
+			
+			if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+	            // Extraire le jeton d'autorisation (enlever le préfixe "Bearer ")
+//	            String token = authorizationHeader.substring(7);
+
+	            // Utiliser le jeton comme nécessaire
+//	            System.out.println("Bearer Token: " + token);
+	            
+	            HttpSession session = request.getSession();
+	            Integer userId = (Integer) session.getAttribute("userId");
+	            System.out.println(userId);
+	            
+	            if(userId!=null) {
+	            	
+	            	QteDto qteDto = new QteDto();
+	            	qteDto.setQte( storeService.countStoreByArtisan(userId) );
+	            	
+	            	System.out.println("qte qqqqqqqqqqqqqqqqq -------------------- tttttttttttt------- : "+qteDto);
+	            	String json = this.objectMapper.writeValueAsString( qteDto );
+					
+					response.setContentType("application/json");
+			        response.setCharacterEncoding("UTF-8");
+			        
+			        response.getWriter().write(json);
+	            	
+	            	
+	            }else {
+	            	
+	            	ErrorMessage message = new ErrorMessage("token is not valid.", new Date(), 400);
+	            	
+					String json = this.objectMapper.writeValueAsString(message);
+					
+					response.setContentType("application/json");
+			        response.setCharacterEncoding("UTF-8");
+			        
+			        response.getWriter().write(json);
+	            }
+			} else {
+	            // Aucun en-tête d'autorisation ou format incorrect
+	            response.getWriter().write("Aucun jeton d'autorisation trouvé");
+	        }
 		}else if(path.split("/")[1].equals("artisan")) {
 			
 			System.out.println("bien entréeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
-			
-			String authorizationHeader = request.getHeader("Authorization");
 			
 			if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
 	            // Extraire le jeton d'autorisation (enlever le préfixe "Bearer ")

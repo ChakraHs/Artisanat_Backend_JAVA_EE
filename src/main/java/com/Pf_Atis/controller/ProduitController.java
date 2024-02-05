@@ -29,6 +29,7 @@ import com.Pf_Artis.dto.CategoryDto;
 import com.Pf_Artis.dto.ImageDto;
 import com.Pf_Artis.dto.LigneCommandeDto;
 import com.Pf_Artis.dto.ProduitDto;
+import com.Pf_Artis.dto.QteDto;
 import com.Pf_Artis.dto.StoreDto;
 import com.Pf_Artis.service.facade.CategoryServiceInterface;
 import com.Pf_Artis.service.facade.ImageServiceInterface;
@@ -85,6 +86,8 @@ public class ProduitController extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
 		String path=request.getPathInfo();
+		System.out.println("paaaaaaaaaaaaaaaaaaaaaaathhhhhhh : "+path);
+		String authorizationHeader = request.getHeader("Authorization");
 		
 		if( path == null || path.split("/")[1].equals("*")) {
 			
@@ -120,44 +123,115 @@ public class ProduitController extends HttpServlet {
 		        response.getWriter().write(json);
 				
 			}
-		}else if(path.split("/")[1].equals("artisan")) {
 			
-			System.out.println("bien entréeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+		}else if(path.split("/")[1].equals("countby") && path.split("/")[2].equals("artisan")) {
 			
-			String authorizationHeader = request.getHeader("Authorization");
+			System.out.println("bien entréeeeeeeeeeeeeeeeeeeeeeeeeeeeeee countby/artisan");
 			
 			if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
 	            // Extraire le jeton d'autorisation (enlever le préfixe "Bearer ")
-	            String token = authorizationHeader.substring(7);
+//	            String token = authorizationHeader.substring(7);
 
 	            // Utiliser le jeton comme nécessaire
-	            System.out.println("Bearer Token: " + token);
+//	            System.out.println("Bearer Token: " + token);
 	            
 	            HttpSession session = request.getSession();
 	            Integer userId = (Integer) session.getAttribute("userId");
-	            System.out.println(userId);
+//	            System.out.println(userId);
 	            
 	            if(userId!=null) {
 	            	
-	            	List<ProduitDto> produitDtos = new ArrayList<ProduitDto>();
+	            	QteDto qteDto = new QteDto();
 	            	List<StoreDto> stores = storeService.findStoreByArtisan(userId);
-	            	System.out.println(stores);
-	            	for(StoreDto storeDto : stores) {
+	            	Integer qte = 0;
+	            	for(StoreDto store:stores) {
 	            		
-	            		List<ProduitDto> produits = produitService.findProduitsByStore(storeDto.getStoreId());
-	            		System.out.println(produits);
-	            		produitDtos.addAll(produits);
+	            		qte += produitService.countProduitByStore(store.getStoreId());
 	            		
 	            	}
 	            	
-					
-
-					String json = this.objectMapper.writeValueAsString(produitDtos);
+	            	qteDto.setQte( qte );
+	            	System.out.println("qte qqqqqqqqqqqqqqqqq -------------------- tttttttttttt------- : "+qte);
+	            	String json = this.objectMapper.writeValueAsString( qteDto );
 					
 					response.setContentType("application/json");
 			        response.setCharacterEncoding("UTF-8");
 			        
 			        response.getWriter().write(json);
+	            	
+	            	
+	            }else {
+	            	
+	            	ErrorMessage message = new ErrorMessage("token is not valid.", new Date(), 400);
+	            	
+					String json = this.objectMapper.writeValueAsString(message);
+					
+					response.setContentType("application/json");
+			        response.setCharacterEncoding("UTF-8");
+			        
+			        response.getWriter().write(json);
+	            }
+			} else {
+	            // Aucun en-tête d'autorisation ou format incorrect
+	            response.getWriter().write("Aucun jeton d'autorisation trouvé");
+	        }
+			
+		}else if(path.split("/")[1].equals("artisan")) {
+			
+			System.out.println("bien entréeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+			
+			if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+	            // Extraire le jeton d'autorisation (enlever le préfixe "Bearer ")
+//	            String token = authorizationHeader.substring(7);
+//
+	            // Utiliser le jeton comme nécessaire
+//	            System.out.println("Bearer Token: " + token);
+	            
+	            HttpSession session = request.getSession();
+	            Integer userId = (Integer) session.getAttribute("userId");
+//	            System.out.println(userId);
+	            
+	            if(userId!=null) {
+	            	
+	            	Integer pageSize = Integer.parseInt(path.split("/")[3]);
+	            	Integer page = Integer.parseInt(path.split("/")[5]);
+	            	
+	            	System.out.println(" - pageSize : "+ pageSize + " - page : "+page);
+	            	Integer index = (page-1)*pageSize +1 ;
+	            	
+	            	List<ProduitDto> produitDtos = new ArrayList<ProduitDto>();
+	            	List<StoreDto> stores = storeService.findStoreByArtisan(userId);
+//	            	System.out.println(stores);
+	            	for(StoreDto storeDto : stores) {
+	            		
+	            		List<ProduitDto> produits = produitService.findProduitsByStore(storeDto.getStoreId());
+//	            		System.out.println(produits);
+	            		produitDtos.addAll(produits);
+	            		
+	            	}
+	            	
+	            	// Vérifiez que l'index est dans les limites de la liste
+	            	if (index >= 1 && index <= produitDtos.size()) {
+	            	    int endIndex = Math.min(index + pageSize - 1, produitDtos.size());
+	            	    List<ProduitDto> paginatedProduits = produitDtos.subList(index - 1, endIndex);
+
+	            	    String json = this.objectMapper.writeValueAsString(paginatedProduits);
+						
+						response.setContentType("application/json");
+				        response.setCharacterEncoding("UTF-8");
+				        
+				        response.getWriter().write(json);
+	            	    
+	            	} else {
+	            		ErrorMessage message = new ErrorMessage("Index hors des limites de la liste.", new Date(), 400);
+	            		
+						String json = this.objectMapper.writeValueAsString(message);
+						
+						response.setContentType("application/json");
+				        response.setCharacterEncoding("UTF-8");
+				        
+				        response.getWriter().write(json);
+	            	}
 					
 				}else {
 					ErrorMessage message = new ErrorMessage("token is not valid.", new Date(), 400);
@@ -221,150 +295,182 @@ public class ProduitController extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
 		// Définit le jeu de caractères pour l'encodage des données de la requête
-	    request.setCharacterEncoding("UTF-8");
-	    Integer storeId = Integer.parseInt(request.getParameter("storeId"));
-	    StoreDto storeDto = storeService.readStore(storeId);
-	    
-	    String categoresId = request.getParameter("categoryId");
-	    boolean categoryExiste = true;
-	    List<CategoryDto> categories = new ArrayList<CategoryDto>();
-	    String[] numbers = categoresId.split(",");
-	    
-	    // Parcourir le tableau pour obtenir chaque nombre
-        for (String number : numbers) {
-        	
-    	    Integer categoryId = Integer.parseInt(number);
-    	    if(!categoryService.categoryExiste(categoryId)) {
-    	    	categoryExiste = false;
-    	    	break;
-    	    }
-    	    
-    	    CategoryDto categoryDto = categoryService.readCategory(categoryId);
-    	    categories.add(categoryDto);
-    	    
-        }
-		System.out.println(categories);
-		if( storeDto.getStoreId() == null || !categoryExiste ) {
+		System.out.println("tessssssssssssssssssssssssssset");
+		
+		String authorizationHeader = request.getHeader("Authorization");
+		
+		if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            // Extraire le jeton d'autorisation (enlever le préfixe "Bearer ")
+            String token = authorizationHeader.substring(7);
 
-			ErrorMessage message = new ErrorMessage("cette store ou category n'existe pas", new Date(), 400);
-
-			String json = this.objectMapper.writeValueAsString(message);
-			
-			response.setContentType("application/json");
-	        response.setCharacterEncoding("UTF-8");
-	        
-	        response.getWriter().write(json);
+            // Utiliser le jeton comme nécessaire
+            System.out.println("Bearer Token: " + token);
             
-		}else {
-		    // Récupère la valeur du champ 'description' à partir de la requête
-		    String description = request.getParameter("description");
-		    
-		    String dateFabricationStr = request.getParameter("date_fabrication");
-		    String datePeremptionStr = request.getParameter("date_peremption");
-		    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		    Date dateFabrication = null;
-		    Date datePeremption = null;
-		    
-		    try {
-		    	dateFabrication = dateFormat.parse(dateFabricationStr);
-		    	datePeremption = dateFormat.parse(datePeremptionStr);
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		    
-		    String nom = request.getParameter("nom");
-		    double poids = Double.parseDouble(request.getParameter("poids"));
-		    double prix = Double.parseDouble(request.getParameter("prix"));
-		    Integer stock = Integer.parseInt(request.getParameter("stock"));
-			
-			System.out.println("description : "+ description);
-			
-	        
-	        
-			// Gère le téléchargement de fichiers images
-	        Collection<Part> parts = request.getParts();
-	        
-		    
-	        // Initialise un objet ImageDto pour stocker les informations de l'image
-	        ImageDto imageDto = new ImageDto();
-	        ProduitDto produitDto = new ProduitDto(null, nom, description, prix, stock, dateFabrication, datePeremption, poids, null, null, null);
-	        
-	        produitDto.setStore(storeDto);
-	        produitDto.setCategorys(categories);
-			ProduitDto saved = produitService.createProduit(produitDto);
-	        
-	        System.out.println("produitDto :"+produitDto);
-	        
-	        for (Part part : parts) {
-	        	System.out.println("name :"+part.getName());
-	        	if (part.getName().equals("image")) {
-	                // Cette partie est le fichier image
-	                InputStream inputStream = part.getInputStream();
-	                // Traite les données de l'image selon les besoins
-	                // ...
-	
-	                // Obtient le nom du fichier téléchargé
-	                // Génère un nom de fichier unique
-	                String fileName = generateUniqueFileName(part);
-	
-	                // Obtient le chemin de sauvegarde
-	                String savePath = getUploadPath(request);
-	                System.out.println("savePath: " + savePath);
-	
-	                // S'assure que le répertoire existe
-	                File directory = new File(savePath);
-	                if (!directory.exists()) {
-	                    directory.mkdirs();
-	                }
-	
-	                // Sauvegarde le fichier image
-	                Path imagePath = Path.of(savePath, fileName);
-	                System.out.println("imagePath: " +imagePath);
-	                try {
-	                    Files.copy(inputStream, imagePath, StandardCopyOption.REPLACE_EXISTING);
-	                    System.out.println("Image copied successfully to: " + imagePath);
-	                } catch (IOException e) {
-	                    e.printStackTrace();
-	                    System.out.println("Error copying image to: " + imagePath);
-	                }
-	                
-	                // Définit le chemin de l'image dans l'objet ImageDto
-	                imageDto.setPath(SAVE_DIRECTORY + '\\' + fileName);
-	                try {
-	                	
-	                	imageDto.setProduit(saved);
-	                	imageService.createImage(imageDto);
-	                	
-					} catch (Exception e) {
-						e.getStackTrace();
-					}
-	                
-	                System.out.println("imageDto :"+imageDto);
-	                
-		        }
-	//        	else if (part.getName().equals("date_fabrication")) {
-	//	            // Assuming you have a 'produit_id' field in your form
-	//	            // Retrieve the 'produit_id' value
-	//	            BufferedReader reader = new BufferedReader(new InputStreamReader(part.getInputStream()));
-	//	            String produitId = reader.readLine();
-	//	            imageDto.set(Long.parseLong(produitId));
-	//	            System.out.println(produitId);
-	//	        }
-	        }
-			try {
+            HttpSession session = request.getSession();
+            Integer userId = (Integer) session.getAttribute("userId");
+            System.out.println(userId);
+            if(userId!=null) {
+            	request.setCharacterEncoding("UTF-8");
+            	System.out.println( request.getParameter("storeId") );
+        	    Integer storeId = Integer.parseInt(request.getParameter("storeId"));
+        	    StoreDto storeDto = storeService.readStore(storeId);
+        	    System.out.println(storeDto);
+        	   
+    	                
+        	    
+        	    
+        	    String categoresId = request.getParameter("category");
+        	    boolean categoryExiste = true;
+        	    List<CategoryDto> categories = new ArrayList<CategoryDto>();
+        	    String[] numbers = categoresId.split(",");
+        	    
+        	    // Parcourir le tableau pour obtenir chaque nombre
+                for (String number : numbers) {
+                	
+            	    Integer categoryId = Integer.parseInt(number);
+            	    if(!categoryService.categoryExiste(categoryId)) {
+            	    	categoryExiste = false;
+            	    	break;
+            	    }
+            	    
+            	    CategoryDto categoryDto = categoryService.readCategory(categoryId);
+            	    categories.add(categoryDto);
+            	    
+                }
+        		System.out.println(categories);
+        		if( storeDto.getStoreId() == null || !categoryExiste ) {
+
+        			ErrorMessage message = new ErrorMessage("cette store ou category n'existe pas", new Date(), 400);
+
+        			String json = this.objectMapper.writeValueAsString(message);
+        			
+        			response.setContentType("application/json");
+        	        response.setCharacterEncoding("UTF-8");
+        	        
+        	        response.getWriter().write(json);
+                    
+        		}else {
+        		    // Récupère la valeur du champ 'description' à partir de la requête
+        		    String description = request.getParameter("description");
+        		    
+        		    String dateFabricationStr = request.getParameter("date_fabrication");
+        		    System.out.println("dateFabricationStr : "+dateFabricationStr);
+        		    String datePeremptionStr = request.getParameter("date_peremption");
+        		    System.out.println("datePeremptionStr : "+datePeremptionStr);
+        		    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        		    Date dateFabrication = null;
+        		    Date datePeremption = null;
+        		    
+        		    try {
+        		    	dateFabrication = dateFormat.parse(dateFabricationStr);
+        		    	datePeremption = dateFormat.parse(datePeremptionStr);
+        			} catch (ParseException e) {
+        				// TODO Auto-generated catch block
+        				e.printStackTrace();
+        			}
+        		    
+        		    String nom = request.getParameter("nom");
+        		    double poids = Double.parseDouble(request.getParameter("poids"));
+        		    double prix = Double.parseDouble(request.getParameter("prix"));
+        		    Integer stock = Integer.parseInt(request.getParameter("stock"));
+        			
+        			System.out.println("description : "+ description);
+        	        
+        			Collection<Part> parts = request.getParts();
+        		    
+        	        // Initialise un objet ImageDto pour stocker les informations de l'image
+        	        ImageDto imageDto = new ImageDto();
+        	        ProduitDto produitDto = new ProduitDto(null, nom, description, prix, stock, dateFabrication, datePeremption, poids, null, null, null);
+        	        
+        	        produitDto.setStore(storeDto);
+        	        produitDto.setCategorys(categories);
+        			ProduitDto saved = produitService.createProduit(produitDto);
+        	        
+        	        System.out.println("produitDto :"+produitDto);
+        	        
+        	        for (Part part : parts) {
+        	        	System.out.println("name :"+part.getName());
+        	        	if (part.getName().equals("image")) {
+        	                // Cette partie est le fichier image
+        	                InputStream inputStream = part.getInputStream();
+        	                // Traite les données de l'image selon les besoins
+        	                // ...
         	
-		    	String json = objectMapper.writeValueAsString(saved);
-		        response.setContentType("application/json");
+        	                // Obtient le nom du fichier téléchargé
+        	                // Génère un nom de fichier unique
+        	                String fileName = generateUniqueFileName(part);
+        	
+        	                // Obtient le chemin de sauvegarde
+        	                String savePath = getUploadPath(request);
+        	                System.out.println("savePath: " + savePath);
+        	
+        	                // S'assure que le répertoire existe
+        	                File directory = new File(savePath);
+        	                if (!directory.exists()) {
+        	                    directory.mkdirs();
+        	                }
+        	
+        	                // Sauvegarde le fichier image
+        	                Path imagePath = Path.of(savePath, fileName);
+        	                System.out.println("imagePath: " +imagePath);
+        	                try {
+        	                    Files.copy(inputStream, imagePath, StandardCopyOption.REPLACE_EXISTING);
+        	                    System.out.println("Image copied successfully to: " + imagePath);
+        	                } catch (IOException e) {
+        	                    e.printStackTrace();
+        	                    System.out.println("Error copying image to: " + imagePath);
+        	                }
+        	                
+        	                // Définit le chemin de l'image dans l'objet ImageDto
+        	                imageDto.setPath(SAVE_DIRECTORY + '\\' + fileName);
+        	                try {
+        	                	
+        	                	imageDto.setProduit(saved);
+        	                	imageService.createImage(imageDto);
+        	                	
+        					} catch (Exception e) {
+        						e.getStackTrace();
+        					}
+        	                
+        	                System.out.println("imageDto :"+imageDto);
+        	                
+        		        }
+        	//        	else if (part.getName().equals("date_fabrication")) {
+        	//	            // Assuming you have a 'produit_id' field in your form
+        	//	            // Retrieve the 'produit_id' value
+        	//	            BufferedReader reader = new BufferedReader(new InputStreamReader(part.getInputStream()));
+        	//	            String produitId = reader.readLine();
+        	//	            imageDto.set(Long.parseLong(produitId));
+        	//	            System.out.println(produitId);
+        	//	        }
+        	        }
+        			try {
+                	
+        		    	String json = objectMapper.writeValueAsString(saved);
+        		        response.setContentType("application/json");
+        		        response.setCharacterEncoding("UTF-8");
+        		        
+        		        response.getWriter().write(json);
+        		        
+        			} catch (Exception e) {
+        		
+        				e.printStackTrace();
+        				
+        			} 
+        		}
+            }else {
+				ErrorMessage message = new ErrorMessage("token is not valid.", new Date(), 400);
+				
+				String json = this.objectMapper.writeValueAsString(message);
+				
+				response.setContentType("application/json");
 		        response.setCharacterEncoding("UTF-8");
 		        
 		        response.getWriter().write(json);
-		        
-			} catch (Exception e) {
-		
-				e.printStackTrace();
-				
-			} 
+			}
+		}else {
+			// Aucun en-tête d'autorisation ou format incorrect
+            response.getWriter().write("Aucun jeton d'autorisation trouvé");
 		}
 	}
 	

@@ -5,12 +5,16 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import com.Pf_Artis.dao.DaoFactory;
+import com.Pf_Artis.dto.CommandeByArtisanDto;
 import com.Pf_Artis.dto.CommandeDto;
+import com.Pf_Artis.dto.ProduitByDateDto;
 import com.Pf_Artis.dto.UserDto;
 import com.Pf_Artis.service.facade.CommandeServiceInterface;
 import com.Pf_Artis.service.facade.UserServiceInterface;
@@ -52,6 +56,7 @@ public class CommandeController extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String authorizationHeader = request.getHeader("Authorization");
 		
 		this.objectMapper.setDateFormat(dateFormat);
 		String path=request.getPathInfo();
@@ -89,8 +94,91 @@ public class CommandeController extends HttpServlet {
 		        response.getWriter().write(json);
 				
 			}
-		}
-		else {
+		}else if(path.split("/")[1].equals("produitByDate") ) {
+			
+			System.out.println("bien entréeeeeeeeeeeeeeeeeeeeeeeeeeeeeee produitByDate");
+			
+			if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+	            // Extraire le jeton d'autorisation (enlever le préfixe "Bearer ")
+//		            String token = authorizationHeader.substring(7);
+
+	            // Utiliser le jeton comme nécessaire
+//		            System.out.println("Bearer Token: " + token);
+	            
+	            HttpSession session = request.getSession();
+	            Integer userId = (Integer) session.getAttribute("userId");
+//		            System.out.println(userId);
+	            
+	            if(userId!=null) {
+	            	
+	            	List<ProduitByDateDto> dtos = commandeService.getNbreProduitAchatByArtisan(userId);
+	            	System.out.println(" tesssssssssssssssssssssssssssssssssssssssssssstttttttttttttttttt dtos :  "+dtos);
+	            	String json = this.objectMapper.writeValueAsString( dtos );
+					
+					response.setContentType("application/json");
+			        response.setCharacterEncoding("UTF-8");
+			        
+			        response.getWriter().write(json);
+	            	
+	            	
+	            }else {
+	            	
+	            	ErrorMessage message = new ErrorMessage("token is not valid.", new Date(), 400);
+	            	
+					String json = this.objectMapper.writeValueAsString(message);
+					
+					response.setContentType("application/json");
+			        response.setCharacterEncoding("UTF-8");
+			        
+			        response.getWriter().write(json);
+	            }
+			} else {
+	            // Aucun en-tête d'autorisation ou format incorrect
+	            response.getWriter().write("Aucun jeton d'autorisation trouvé");
+	        }
+		}else if(path.split("/")[1].equals("ByArtisan") ) {
+			
+			System.out.println("bien entréeeeeeeeeeeeeeeeeeeeeeeeeeeeeee produitByDate");
+			
+			if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+	            // Extraire le jeton d'autorisation (enlever le préfixe "Bearer ")
+//		            String token = authorizationHeader.substring(7);
+
+	            // Utiliser le jeton comme nécessaire
+//		            System.out.println("Bearer Token: " + token);
+	            
+	            HttpSession session = request.getSession();
+	            Integer userId = (Integer) session.getAttribute("userId");
+//		            System.out.println(userId);
+	            
+	            if(userId!=null) {
+	            	
+	            	List<CommandeByArtisanDto> dtos = commandeService.getCommandeByArtisan(userId);
+	            	System.out.println(" tesssssssssssssssssssssssssssssssssssssssssssstttttttttttttttttt dtos :  "+dtos);
+	            	String json = this.objectMapper.writeValueAsString( dtos );
+					
+					response.setContentType("application/json");
+			        response.setCharacterEncoding("UTF-8");
+			        
+			        response.getWriter().write(json);
+	            	
+	            	
+	            }else {
+	            	
+	            	ErrorMessage message = new ErrorMessage("token is not valid.", new Date(), 400);
+	            	
+					String json = this.objectMapper.writeValueAsString(message);
+					
+					response.setContentType("application/json");
+			        response.setCharacterEncoding("UTF-8");
+			        
+			        response.getWriter().write(json);
+	            }
+			} else {
+	            // Aucun en-tête d'autorisation ou format incorrect
+	            response.getWriter().write("Aucun jeton d'autorisation trouvé");
+	        }
+		}else {
 			
 			String[] pathParts = path.split("/");
 			

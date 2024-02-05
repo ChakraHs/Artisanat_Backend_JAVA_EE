@@ -21,5 +21,7 @@ public interface StoreServiceInterface {
     StoreDto getLastStores();
 
 	List<StoreDto> findStoreByArtisan(Integer id);
+
+	Integer countStoreByArtisan(Integer id);
 	
 }
